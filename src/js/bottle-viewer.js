@@ -33,6 +33,19 @@ function initViewer(container, opts) {
   const enableControls = opts.enableControls !== false;
   const autoRotate = opts.autoRotate !== false;
   const photoStage = hideSiblingPhoto ? container.parentElement.querySelector('[data-tilt-stage]') : null;
+  // The hero bottle nests its static photo directly inside the same
+  // container as the canvas (not a [data-tilt-stage] sibling like product
+  // pages), so it needs its own handle here.
+  const innerPhoto = container.querySelector('picture, img');
+
+  // Hide the static photo the moment we commit to a 3D attempt, not once
+  // the GLB finishes loading — the WebGL canvas below is appended
+  // synchronously but stays fully transparent (nothing rendered yet) until
+  // the async load resolves, so the photo was staying visible underneath
+  // it for however long that fetch + parse took. Restored on error, since
+  // that's the one path where the photo needs to remain the real fallback.
+  if (photoStage) photoStage.style.display = 'none';
+  if (innerPhoto) innerPhoto.style.display = 'none';
 
   // Hero use only: the container gets CSS-transform-scaled up to 3.4x at
   // the climax (icarus-cinematic.js's bottle "rebirth" tween) without ever
@@ -114,7 +127,6 @@ function initViewer(container, opts) {
 
       resize();
       container.classList.add('is-ready');
-      if (photoStage) photoStage.style.display = 'none';
       container.hidden = false;
 
       if (showHint) {
@@ -140,10 +152,13 @@ function initViewer(container, opts) {
     },
     undefined,
     () => {
-      // No model for this product yet, or it failed to load — the static
-      // photo (if any) is already visible and correct; just discard the 3D
-      // container. In hero contexts with no photo fallback, this just means
-      // that layer of the sequence never appears — nothing breaks.
+      // No model for this product yet, or it failed to load — restore
+      // whichever photo we hid up front so it's the fallback the visitor
+      // actually sees, then discard the 3D container. In hero contexts
+      // with no photo fallback, this just means that layer of the
+      // sequence never appears — nothing breaks.
+      if (photoStage) photoStage.style.display = '';
+      if (innerPhoto) innerPhoto.style.display = '';
       container.remove();
       if (opts.onError) opts.onError();
     }

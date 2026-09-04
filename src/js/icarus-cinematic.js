@@ -77,7 +77,6 @@
       bottleInited = true;
       window.IKARIS_BOTTLE_VIEWER.init(bottleEl, {
         glbUrl: bottleEl.getAttribute('data-glb-url'),
-        hideSiblingPhoto: false,
         showHint: false,
         enableControls: false,
         autoRotate: true,
@@ -86,8 +85,6 @@
         // extra baked-in resolution to survive that stretch sharply.
         oversample: 2,
         onReady: function () {
-          var photo = bottleEl.querySelector('picture, img');
-          if (photo) photo.style.display = 'none';
           bottleEl.classList.add('is-live');
         },
       });
