@@ -1,5 +1,9 @@
 node_modules/
 
+# Claude Code's own per-session runtime lock (PID, session ID) — machine-
+# and session-specific, not project state.
+.claude/scheduled_tasks.lock
+
 # --- Working-directory clutter (not part of the site or its build
 # pipeline — screen recordings, ad-hoc screenshots, and raw CAD/3D source
 # files left over from experimenting before settling on the
