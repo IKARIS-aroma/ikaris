@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /order-confirmed/
+Disallow: /404.html
+Disallow: /analytics-debug/
+
+Sitemap: https://ikaris-aroma.github.io/ikaris/sitemap.xml

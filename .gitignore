@@ -1,0 +1,28 @@
+node_modules/
+
+# --- Working-directory clutter (not part of the site or its build
+# pipeline — screen recordings, ad-hoc screenshots, and raw CAD/3D source
+# files left over from experimenting before settling on the
+# source/untitled.fbx + blender/build_bottles.py pipeline). Root-anchored
+# so this never touches real project assets nested under assets/, docs/, etc. ---
+/*.mp4
+/*.mov
+/Screenshot *.png
+/[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]-*.png
+/*.igs
+/*.stp
+/*.obj
+/*.max
+/*.blend
+/Material1_alpha.png.png
+/MAXFILES.TXT
+/ikaris-assets.zip
+/__MACOSX/
+
+# Archival source stills for the hero video and illustrations — large
+# (170MB+ combined) and only needed to *rebuild* the baked assets
+# (assets/icarus/*.mp4, assets/labels/*) via generator/build-icarus-video.js
+# and the Blender scripts, not to serve the site. Keep locally; the built
+# outputs already live in assets/ and are tracked normally.
+/icarus-src/
+/video-gen-source/

@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "noir",
+    "name": "Noir",
+    "labelPath": "assets/labels/noir.png",
+    "glassColor": "#050403",
+    "liquidColor": "#2a1a10",
+    "capColor": "#0a0908",
+    "capMetal": "gunmetal",
+    "bodyWidth": 0.6,
+    "bodyHeight": 1.08,
+    "taper": 0.76
+  },
+  {
+    "slug": "vesper",
+    "name": "Vesper",
+    "labelPath": "assets/labels/vesper.png",
+    "glassColor": "#101822",
+    "liquidColor": "#4a6a8a",
+    "capColor": "#282d34",
+    "capMetal": "silver",
+    "bodyWidth": 0.56,
+    "bodyHeight": 1.12,
+    "taper": 0.82
+  },
+  {
+    "slug": "monarch",
+    "name": "Monarch",
+    "labelPath": "assets/labels/monarch.png",
+    "glassColor": "#28190b",
+    "liquidColor": "#6b4315",
+    "capColor": "#6e5220",
+    "capMetal": "gold",
+    "bodyWidth": 0.64,
+    "bodyHeight": 1.05,
+    "taper": 0.72
+  },
+  {
+    "slug": "iris",
+    "name": "Iris",
+    "labelPath": "assets/labels/iris.png",
+    "glassColor": "#3f3446",
+    "liquidColor": "#7a6488",
+    "capColor": "#5f5468",
+    "capMetal": "silver",
+    "bodyWidth": 0.54,
+    "bodyHeight": 1.06,
+    "taper": 0.8
+  },
+  {
+    "slug": "opalite",
+    "name": "Opalite",
+    "labelPath": "assets/labels/opalite.png",
+    "glassColor": "#c9c3b6",
+    "liquidColor": "#eee6d4",
+    "capColor": "#cfc6ae",
+    "capMetal": "gold",
+    "bodyWidth": 0.56,
+    "bodyHeight": 1.04,
+    "taper": 0.84
+  },
+  {
+    "slug": "amor",
+    "name": "Amor",
+    "labelPath": "assets/labels/amor.png",
+    "glassColor": "#4a222b",
+    "liquidColor": "#a2515e",
+    "capColor": "#7a5348",
+    "capMetal": "gold",
+    "bodyWidth": 0.58,
+    "bodyHeight": 1.02,
+    "taper": 0.79
+  }
+]
