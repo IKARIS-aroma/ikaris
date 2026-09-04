@@ -102,12 +102,55 @@ function initViewer(container, opts) {
     camera.updateProjectionMatrix();
   }
 
-  const handle = { scene, camera, renderer, controls, model: null, resize };
+  // Nothing here was ever torn down — every viewer (each showcase panel
+  // visited, plus the hero's own bottle) kept its WebGLRenderer, its
+  // requestAnimationFrame loop, and its GPU-side geometry/textures alive
+  // forever, even once hidden. A few fragrances into the showcase slider
+  // and several WebGL contexts are running full render loops
+  // simultaneously — desktop tolerates that, but mobile browsers cap the
+  // number of live contexts much lower (and have far less GPU memory),
+  // so this is what was actually behind the slider "crashing" and the
+  // hero bottle sometimes coming up blank (a new context silently failing
+  // to allocate because old ones were never released).
+  let raf = null;
+  let ro = null;
+  let disposed = false;
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    if (raf) cancelAnimationFrame(raf);
+    if (ro) ro.disconnect();
+    if (photoStage) photoStage.style.display = '';
+    if (innerPhoto) innerPhoto.style.display = '';
+    controls.dispose();
+    scene.traverse((obj) => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach((m) => {
+          Object.keys(m).forEach((key) => {
+            const value = m[key];
+            if (value && value.isTexture) value.dispose();
+          });
+          m.dispose();
+        });
+      }
+    });
+    if (scene.environment) scene.environment.dispose();
+    pmrem.dispose();
+    renderer.dispose();
+    renderer.forceContextLoss();
+    if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+  }
+
+  const handle = { scene, camera, renderer, controls, model: null, resize, dispose };
 
   const loader = new GLTFLoader();
   loader.load(
     glbUrl,
     (gltf) => {
+      if (disposed) return; // switched away from this panel before the GLB finished loading
       const model = gltf.scene;
       const box = new THREE.Box3().setFromObject(model);
       const size = new THREE.Vector3();
@@ -136,7 +179,6 @@ function initViewer(container, opts) {
         container.appendChild(hint);
       }
 
-      let raf;
       function animate() {
         raf = requestAnimationFrame(animate);
         controls.update();
@@ -144,21 +186,21 @@ function initViewer(container, opts) {
       }
       animate();
 
-      const ro = new ResizeObserver(resize);
+      ro = new ResizeObserver(resize);
       ro.observe(container);
 
-      window.addEventListener('beforeunload', () => cancelAnimationFrame(raf));
+      window.addEventListener('beforeunload', dispose);
       if (opts.onReady) opts.onReady(handle);
     },
     undefined,
     () => {
-      // No model for this product yet, or it failed to load — restore
-      // whichever photo we hid up front so it's the fallback the visitor
-      // actually sees, then discard the 3D container. In hero contexts
-      // with no photo fallback, this just means that layer of the
-      // sequence never appears — nothing breaks.
-      if (photoStage) photoStage.style.display = '';
-      if (innerPhoto) innerPhoto.style.display = '';
+      // No model for this product yet, or it failed to load — dispose()
+      // restores whichever photo we hid up front (the real fallback the
+      // visitor should see) and releases the renderer/PMREM, which were
+      // already created and hold a live WebGL context that would
+      // otherwise leak. In hero contexts with no photo fallback, this
+      // just means that layer of the sequence never appears.
+      dispose();
       container.remove();
       if (opts.onError) opts.onError();
     }

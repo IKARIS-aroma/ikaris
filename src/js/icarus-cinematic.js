@@ -221,6 +221,25 @@
       var nextBtn = sc.querySelector('[data-showcase-next]');
       var current = 0;
       var inited3d = {};
+      // Slug -> live viewer handle. Only ever one at a time in practice
+      // (the carousel shows one panel), but tracked by slug rather than a
+      // single variable so goTo() can dispose exactly the panel it's
+      // leaving, even under a fast double-click.
+      var viewers = {};
+
+      function disposeSlug(slug) {
+        var entry = viewers[slug];
+        if (!entry) return;
+        entry.handle.dispose();
+        // Reset the container so if this panel is revisited, init3D below
+        // builds a clean new canvas + hint instead of stacking a second
+        // "Drag to Rotate" label onto whatever dispose() left behind.
+        entry.el.hidden = true;
+        entry.el.classList.remove('is-ready');
+        entry.el.innerHTML = '';
+        delete viewers[slug];
+        delete inited3d[slug];
+      }
 
       function init3D(panel) {
         var el = panel.querySelector('[data-bottle-3d-lazy]');
@@ -228,13 +247,20 @@
         if (!el || inited3d[slug] || !window.IKARIS_BOTTLE_VIEWER || !window.IKARIS_BOTTLE_VIEWER.supportsWebGL()) return;
         inited3d[slug] = true;
         el.hidden = false;
-        window.IKARIS_BOTTLE_VIEWER.init(el, {
+        // Every previously-visited panel's viewer used to keep running in
+        // the background forever (its own WebGL context + render loop),
+        // never disposed — a few fragrances into the slider and several
+        // contexts are alive at once, which mobile browsers tolerate far
+        // worse than desktop. Disposing whatever's currently live before
+        // starting a new one keeps at most one context open at a time.
+        Object.keys(viewers).forEach(disposeSlug);
+        viewers[slug] = { el: el, handle: window.IKARIS_BOTTLE_VIEWER.init(el, {
           glbUrl: el.getAttribute('data-glb-url'),
           hideSiblingPhoto: true,
           showHint: true,
           enableControls: true,
           autoRotate: true,
-        });
+        }) };
       }
 
       function renderDots() {

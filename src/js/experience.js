@@ -23,8 +23,26 @@
       window.setTimeout(function () { pre.remove(); }, 700);
     }
     if (reduceMotion) { dismiss(); return; }
-    window.addEventListener('load', function () { window.setTimeout(dismiss, 500); });
-    window.setTimeout(dismiss, 2200); // safety timeout so a slow asset never traps the visitor
+
+    // The homepage hero's video gets its .src assigned by icarus-cinematic.js
+    // (a JS-driven wide/tall pick, not a static <source>), which runs after
+    // this script and isn't something window's own 'load' event waits on —
+    // so on a slow connection the preloader was clearing well before the
+    // heaviest asset on the page was actually ready, handing the visitor a
+    // blank hero mid-scroll-in. Hold for its metadata too when it's present.
+    var heroVideo = document.querySelector('[data-icarus-video]');
+    var safetyMs = 2200;
+    if (heroVideo) {
+      safetyMs = 4000; // a bit more grace before the safety net fires on slow connections
+      if (heroVideo.readyState >= 1 /* HAVE_METADATA */) {
+        window.setTimeout(dismiss, 400);
+      } else {
+        heroVideo.addEventListener('loadedmetadata', function () { window.setTimeout(dismiss, 400); }, { once: true });
+      }
+    } else {
+      window.addEventListener('load', function () { window.setTimeout(dismiss, 500); });
+    }
+    window.setTimeout(dismiss, safetyMs); // safety timeout so a slow asset never traps the visitor
   }
 
   // ---------- Custom cursor ----------
