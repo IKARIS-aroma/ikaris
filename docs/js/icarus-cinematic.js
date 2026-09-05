@@ -79,13 +79,18 @@
       gsap.ticker.lagSmoothing(0);
     }
 
+    // Thresholds re-derived from the actual baked video's beat windows (see
+    // the caption comment further down) rather than the original abstract
+    // percentages — those ran 8-10 points behind what the video was
+    // already showing (e.g. the sky stayed "daytime" until 48% when the
+    // video was already well into the fall by 38%).
     var PHASES = ['phase-dawn', 'phase-ascend', 'phase-peak', 'phase-fall', 'phase-ocean', 'phase-rise'];
     function phaseForProgress(p) {
-      if (p < 0.20) return 'phase-dawn';
-      if (p < 0.34) return 'phase-ascend';
-      if (p < 0.48) return 'phase-peak';
-      if (p < 0.68) return 'phase-fall';
-      if (p < 0.85) return 'phase-ocean';
+      if (p < 0.08) return 'phase-dawn';
+      if (p < 0.21) return 'phase-ascend';
+      if (p < 0.40) return 'phase-peak';
+      if (p < 0.60) return 'phase-fall';
+      if (p < 0.79) return 'phase-ocean';
       return 'phase-rise';
     }
     var currentPhase = '';
@@ -153,7 +158,10 @@
 
           cue.classList.toggle('is-hidden', p > 0.04);
           actions.classList.toggle('is-live', p > 0.88);
-          if (p > 0.75) initBottle();
+          // Starts loading earlier (was 0.75) now that the reveal itself
+          // starts at 0.80 — the GLB needs real lead time to fetch/parse
+          // before it's actually due on screen.
+          if (p > 0.68) initBottle();
 
           // Clouds drift on their own via CSS, but also parallax with
           // scroll so the sky itself feels like it's moving as you move,
@@ -177,37 +185,73 @@
       });
     }
 
-    tl.to(figure, { opacity: 0, duration: 6 }, 82);
+    // Fully gone by 80 — previously faded 82-88 while the real bottle was
+    // ALSO fading in from 78, so for a 6-point stretch the illustrated
+    // (teal, hand-drawn) bottle in the video and the real 3D (dark,
+    // faceted) product bottle were both on screen in the same spot at
+    // once. Confirmed live: a visible double-bottle overlap right at the
+    // supposed "transformation" moment, undercutting the one beat that's
+    // supposed to read as a clean reveal.
+    tl.to(figure, { opacity: 0, duration: 12 }, 68);
 
     // Ocean rises into frame as Icarus falls, settles once he's in it.
-    // (gsap.set first so GSAP tracks the CSS translateY(100%) as yPercent —
-    // otherwise it assumes yPercent starts at 0 and the tween is a no-op.)
+    // Start nudged from 38 to 34 to close part of the same lag the phase
+    // thresholds above were re-synced for. (gsap.set first so GSAP tracks
+    // the CSS translateY(100%) as yPercent — otherwise it assumes
+    // yPercent starts at 0 and the tween is a no-op.)
     gsap.set(ocean, { y: 0, yPercent: 100 });
-    tl.to(ocean, { yPercent: 0, duration: 16 }, 38);
+    tl.to(ocean, { yPercent: 0, duration: 20 }, 34);
 
-    // Sun-glints during the climb, sea-spray during the fall/splash/dive.
-    tl.to(particles, { opacity: 1, duration: 8 }, 14)
-      .to(particles, { opacity: 0.3, duration: 8 }, 30)
-      .to(particles, { opacity: 1, duration: 8 }, 50)
-      .to(particles, { opacity: 0, duration: 8 }, 68);
+    // Sun-glints during the climb, sea-spray during the fall/splash/dive —
+    // shifted earlier in step with the re-synced phase thresholds.
+    tl.to(particles, { opacity: 1, duration: 8 }, 10)
+      .to(particles, { opacity: 0.3, duration: 8 }, 26)
+      .to(particles, { opacity: 1, duration: 8 }, 44)
+      .to(particles, { opacity: 0, duration: 8 }, 62);
 
-    // Rebirth: the real bottle grows from nothing, overtakes the figure,
-    // then closes the distance until it fills the screen at 100%.
-    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 10 }, 78)
-      .to(bottleEl, { scale: 1.7, duration: 10 }, 90)
-      .to(bottleEl, { scale: 3.4, duration: 4 }, 100 - 4);
+    // Rebirth: the real bottle grows from nothing exactly as the
+    // illustrated one finishes fading (80, right after figure above),
+    // then closes the distance until it fills the screen at 100%. Three
+    // strictly back-to-back segments (78->88->94->100, whereas the old
+    // 78/90/96 numbers overlapped 90-96 and 96-100) — two tweens fighting
+    // over the same `scale` property in that overlap produced a small but
+    // real speed hitch right at the payoff.
+    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 8 }, 80)
+      .to(bottleEl, { scale: 1.7, duration: 6 }, 88)
+      .to(bottleEl, { scale: 3.4, duration: 6 }, 94);
 
-    // Captions, keyed to the new five-beat windows.
-    function line(idx) { return lines[idx]; }
-    function sub(idx) { return subs[idx]; }
-    // All four lines share one grid cell (see .epic__caption in style.css)
+    // Captions, keyed to the actual baked video beat windows (see
+    // generator/build-icarus-video.js: CLIP_DUR=3.6, XFADE=0.6, 5 beats ->
+    // beat N's own window as % of total scroll is roughly ascend 0-23,
+    // peak 19-42, fall 38-62, dive 58-81, rise 77-100). The original
+    // caption timings were authored against an earlier abstract "story
+    // beat" percentage scheme and drifted 8-10 points behind what the
+    // video actually shows by the time it landed — confirmed live by
+    // scrolling the real page: at 40% the sun was still at full daytime
+    // opacity while the video already showed him falling toward the sea.
+    // Looked up by data-epic-sub/-line VALUE, not array index, since the
+    // two new captions below (2, 3) aren't in numeric DOM order.
+    function line(idx) { return root.querySelector('[data-epic-line="' + idx + '"]'); }
+    function sub(idx) { return root.querySelector('[data-epic-sub="' + idx + '"]'); }
+    // All six lines share one grid cell (see .epic__caption in style.css)
     // so the crossfades below must hand off sequentially, not overlap in
     // time — two lines partially visible at once means two lines of text
     // literally drawn on top of each other in the same spot.
-    if (line(0)) { gsap.set(line(0), { opacity: 1 }); tl.to(line(0), { opacity: 0, duration: 4 }, 10); }
-    if (sub(0)) tl.to(sub(0), { opacity: 1, duration: 4 }, 14).to(sub(0), { opacity: 0, duration: 4 }, 26);
-    if (sub(1)) tl.to(sub(1), { opacity: 1, duration: 4 }, 40).to(sub(1), { opacity: 0, duration: 4 }, 58);
-    if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 76);
+    if (line(0)) { gsap.set(line(0), { opacity: 1 }); tl.to(line(0), { opacity: 0, duration: 4 }, 8); }
+    if (sub(0)) tl.to(sub(0), { opacity: 1, duration: 4 }, 12).to(sub(0), { opacity: 0, duration: 4 }, 20);
+    // Peak/hubris beat (video ~19-42) previously had no caption at all —
+    // the wax visibly melting was the one story beat told in total silence.
+    if (sub(2)) tl.to(sub(2), { opacity: 1, duration: 4 }, 26).to(sub(2), { opacity: 0, duration: 4 }, 34);
+    if (sub(1)) tl.to(sub(1), { opacity: 1, duration: 4 }, 40).to(sub(1), { opacity: 0, duration: 4 }, 48);
+    // Dive/discovery beat (video ~58-81) also had no caption — this is the
+    // myth-to-product hinge (why is there a bottle underwater?) and was
+    // previously left entirely to inference.
+    if (sub(3)) tl.to(sub(3), { opacity: 1, duration: 4 }, 56).to(sub(3), { opacity: 0, duration: 4 }, 66);
+    // Starts right as the real bottle begins fading in below (80) — the
+    // line and the reveal land together — and clears out at 90, before the
+    // bottle's biggest scale-up, so it never overlaps the bottle's neck/cap
+    // the way the unconditional "stay visible to 100%" version used to.
+    if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 80).to(line(1), { opacity: 0, duration: 4 }, 90);
 
     tl.to(actions, { opacity: 1, duration: 6 }, 90);
   }
