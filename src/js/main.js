@@ -205,12 +205,36 @@
     insertFallbackNoticeIfNeeded(document.querySelector('[data-cart-table]') || emptyState);
 
     function render() {
+      // tableBody.innerHTML = '' below throws away every row, including
+      // whichever +/- or Remove button the visitor just activated — for a
+      // keyboard or screen-reader user, focus then falls back to <body>,
+      // and the next Tab press starts over from the top of the page
+      // instead of continuing from where they were. Captured against the
+      // *old* cart (this closure's `cart`, not yet reassigned) since that
+      // reflects the row positions currently in the DOM.
+      var activeEl = document.activeElement;
+      var restoreFocus = null;
+      if (activeEl && tableBody.contains(activeEl)) {
+        var role = activeEl.hasAttribute('data-cart-inc') ? 'inc'
+          : activeEl.hasAttribute('data-cart-dec') ? 'dec'
+          : activeEl.hasAttribute('data-cart-remove') ? 'remove'
+          : null;
+        if (role) {
+          var slug = activeEl.getAttribute('data-cart-' + role);
+          restoreFocus = { role: role, slug: slug, index: cart.findIndex(function (l) { return l.slug === slug; }) };
+        }
+      }
+
       cart = window.IKARIS_CART.getCart();
       tableBody.innerHTML = '';
       if (cart.length === 0) {
         if (emptyState) emptyState.hidden = false;
         if (summaryWrap) summaryWrap.hidden = true;
         document.querySelector('[data-cart-table]') && (document.querySelector('[data-cart-table]').hidden = true);
+        if (restoreFocus && emptyState) {
+          var emptyFocusTarget = emptyState.querySelector('a, button');
+          if (emptyFocusTarget) emptyFocusTarget.focus();
+        }
         return;
       }
       if (emptyState) emptyState.hidden = true;
@@ -237,6 +261,19 @@
         var countEl = summaryWrap.querySelector('[data-cart-count]');
         if (totalEl) totalEl.textContent = '₹' + total.toLocaleString('en-IN');
         if (countEl) countEl.textContent = String(window.IKARIS_CART.getCartCount(cart));
+      }
+
+      if (restoreFocus) {
+        var target = tableBody.querySelector('[data-cart-' + restoreFocus.role + '="' + restoreFocus.slug + '"]');
+        if (!target) {
+          // The focused line is gone (qty dropped to 0, or Remove was
+          // clicked) — land on the Remove button of whatever now sits in
+          // that same row position, so repeatedly clearing lines keeps
+          // walking down the table instead of dropping focus every time.
+          var removeButtons = tableBody.querySelectorAll('[data-cart-remove]');
+          target = removeButtons[Math.min(restoreFocus.index, removeButtons.length - 1)];
+        }
+        if (target) target.focus();
       }
     }
 

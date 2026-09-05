@@ -156,7 +156,18 @@
       scrollTrigger: {
         trigger: root,
         start: 'top top',
-        end: '+=400%',
+        // Was +=400%. All the beat percentages below are relative to this
+        // total, so raising it slows the entire sequence uniformly — every
+        // beat, the video scrub included, now takes 25% more physical
+        // scroll to get through, without touching a single percentage
+        // point (which stay synced to the baked video's own beat windows;
+        // re-deriving those took real work earlier and isn't worth
+        // reopening). Directly answers "keep the scroll speed slower":
+        // the finale hold below was still only ~32vh of scroll at 400%,
+        // easily blown through in a single fast flick on mobile — at 500%
+        // the same percentage window is ~40vh, and wider still now that
+        // the hold itself was also widened (see the bottle scale tweens).
+        end: '+=500%',
         scrub: 1,
         pin: true,
         anticipatePin: 1,
@@ -248,19 +259,23 @@
 
     // Rebirth: the real bottle grows from nothing exactly as the
     // illustrated one finishes fading (74, right after figure above), then
-    // closes the distance until it fills the screen — but finishes at 92,
-    // not 100. The payoff used to complete exactly as the pin released,
-    // so the fully-revealed bottle was on screen for a single instant
-    // before scrolling straight into the next section ("the last frame is
-    // too short, barely visible" — confirmed: zero dwell time at the end).
-    // Holding the final scale from 92-100 gives it a full 8 points of
-    // scroll to actually be seen. Three strictly back-to-back segments
-    // (74->81->86->92, not overlapping) — the old 78/90/96 numbers
-    // overlapped 90-96 and 96-100, two tweens fighting over the same
-    // `scale` property, which produced a small but real speed hitch.
-    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 7 }, 74)
-      .to(bottleEl, { scale: 1.7, duration: 5 }, 81)
-      .to(bottleEl, { scale: 3.4, duration: 6 }, 86);
+    // closes the distance until it fills the screen — but finishes at 88,
+    // not 100. The payoff used to complete exactly as the pin released, so
+    // the fully-revealed bottle was on screen for a single instant before
+    // scrolling straight into the next section ("the last frame is too
+    // short, barely visible" — confirmed live, twice: first with zero
+    // dwell at all, then again after an 8-point hold still wasn't enough
+    // on a real device, since 8% of even the old 400%-length pin is only
+    // ~32vh — a single fast swipe. Finishing the scale-up at 88 instead of
+    // 92 gives 12 points of hold instead of 8, and that 12% now applies to
+    // the wider 500%-length pin above (~60vh total) — nearly double the
+    // previous physical scroll distance. Three strictly back-to-back
+    // segments (74->80->84->88, not overlapping) — the old 78/90/96
+    // numbers overlapped 90-96 and 96-100, two tweens fighting over the
+    // same `scale` property, which produced a small but real speed hitch.
+    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 6 }, 74)
+      .to(bottleEl, { scale: 1.7, duration: 4 }, 80)
+      .to(bottleEl, { scale: 3.4, duration: 4 }, 84);
 
     // Captions, keyed to the actual baked video beat windows (see
     // generator/build-icarus-video.js: CLIP_DUR=3.6, XFADE=0.6, 5 beats ->
@@ -297,6 +312,18 @@
     if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 74).to(line(1), { opacity: 0, duration: 4 }, 84);
 
     tl.to(actions, { opacity: 1, duration: 6 }, 84);
+
+    // The actual root cause of "the last frame is too short" surviving
+    // several previous rounds of retiming: GSAP infers a timeline's own
+    // totalDuration from whichever child tween ends LAST — here, actions
+    // finishing at 90 — and scrub maps scroll progress onto THAT total,
+    // not onto a fixed literal 100. With nothing authored past 90, position
+    // 90 WAS 100% scroll progress, so the bottle's "finish at 88" was really
+    // finishing at 88/90 = 97.8% of the scroll — a hold of barely 2 points,
+    // no matter how generously the percentages above were spaced out. This
+    // empty marker anchors true position 100 as the real end, so 88-100
+    // is a genuine 12-point hold with nothing left changing in it.
+    tl.set({}, {}, 100);
   }
 
   function initGallerySwitcher() {
@@ -394,12 +421,25 @@
 
       function renderDots() {
         if (!dotsWrap) return;
+        // Rebuilding via innerHTML destroys and recreates every dot button,
+        // including whichever one was just clicked or reached by keyboard —
+        // focus fell back to document.body on every navigation, so a
+        // keyboard user pressing Enter on a dot (or prev/next) lost their
+        // place entirely and had to re-Tab from the top of the page. Only
+        // worth restoring if focus was actually inside the dots to begin
+        // with (true right after a click/keypress on one) — plain page
+        // load or a mouse click on prev/next shouldn't yank focus here.
+        var hadFocus = document.activeElement && dotsWrap.contains(document.activeElement);
         dotsWrap.innerHTML = panels.map(function (p, i) {
           return '<button type="button" class="showcase__dot' + (i === current ? ' is-active' : '') + '" data-i="' + i + '" aria-label="Show ' + p.getAttribute('data-name') + '"></button>';
         }).join('');
         Array.prototype.slice.call(dotsWrap.querySelectorAll('button')).forEach(function (b) {
           b.addEventListener('click', function () { goTo(Number(b.getAttribute('data-i'))); });
         });
+        if (hadFocus) {
+          var toFocus = dotsWrap.querySelector('[data-i="' + current + '"]');
+          if (toFocus) toFocus.focus();
+        }
       }
 
       function setAttrs(el, panel) {
@@ -437,7 +477,27 @@
       if (nextBtn) nextBtn.addEventListener('click', function () { goTo(current + 1); });
 
       renderDots();
-      init3D(panels[0]);
+
+      // Previously init3D(panels[0]) ran unconditionally here for every
+      // showcase on the page — the homepage has two (men, women), both
+      // below the fold, so page load was paying for two full WebGL
+      // contexts (plus, per the PMREM comment in bottle-viewer.js, two
+      // expensive environment-map render passes) before the visitor had
+      // scrolled anywhere near either one. Deferring to an
+      // IntersectionObserver spreads that cost out to when it's actually
+      // needed instead of bursting it all at once on load — one more
+      // contributor to the iOS crash reports alongside the PMREM skip.
+      if ('IntersectionObserver' in window) {
+        var lazyIO = new IntersectionObserver(function (entries) {
+          if (entries[entries.length - 1].isIntersecting) {
+            lazyIO.disconnect();
+            init3D(panels[current]);
+          }
+        }, { rootMargin: '200px' });
+        lazyIO.observe(sc);
+      } else {
+        init3D(panels[0]);
+      }
     });
   }
 

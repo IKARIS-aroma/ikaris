@@ -79,8 +79,27 @@ function initViewer(container, opts) {
   renderer.toneMappingExposure = 1.1;
   container.appendChild(renderer.domElement);
 
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  // PMREMGenerator.fromScene renders a full environment cubemap plus its
+  // mip chain through this context — a genuinely heavy one-time GPU pass,
+  // not just a cheap texture upload. A single page here can trigger up to
+  // three of these nearly simultaneously (the homepage's two showcase
+  // carousels init on load, then the hero bottle joins in once scrolled
+  // to), stacked on top of whatever the hero video's own decode is
+  // costing — a very plausible cause of the WebGL/GPU-driver crashes
+  // reported specifically on iOS Safari, which tolerates concurrent GPU
+  // work far worse than desktop. Skip the environment pass entirely on
+  // coarse-pointer devices and approximate the same soft fill with a
+  // hemisphere light instead: cheap (no render pass at all), at the cost
+  // of losing the glass's subtle environment reflections — the same
+  // "a little softer on a phone is fine" trade already made for
+  // antialiasing and oversample above.
+  let pmrem = null;
+  if (isCoarsePointer) {
+    scene.add(new THREE.HemisphereLight(0xfff2d9, 0x1a1a22, 0.9));
+  } else {
+    pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  }
 
   const key = new THREE.DirectionalLight(0xfff2d9, 1.4);
   key.position.set(2, 3, 2.5);
@@ -170,7 +189,7 @@ function initViewer(container, opts) {
       }
     });
     if (scene.environment) scene.environment.dispose();
-    pmrem.dispose();
+    if (pmrem) pmrem.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
     if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
