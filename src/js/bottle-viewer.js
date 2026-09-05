@@ -156,11 +156,17 @@ function initViewer(container, opts) {
   controls.autoRotateSpeed = 2.2;
 
   let userInteracted = false;
+  let hintEl = null; // assigned below once the GLB loads and the hint is actually created
   controls.addEventListener('start', () => {
     controls.autoRotate = false;
     if (!userInteracted) {
       userInteracted = true;
       if (window.track) window.track('product_3d_interact', { item_id: container.dataset.slug || opts.slug || null });
+      // The hint used to stay on screen, static, for the entire visit —
+      // it's only meant to teach the gesture once. Fade it out the moment
+      // real drag input is confirmed rather than leaving it competing with
+      // the bottle for attention indefinitely.
+      if (hintEl) hintEl.classList.add('is-dismissed');
     }
   });
 
@@ -264,6 +270,7 @@ function initViewer(container, opts) {
         hint.className = 'bottle-3d__hint';
         hint.textContent = 'Drag to Rotate';
         container.appendChild(hint);
+        hintEl = hint;
       }
 
       function animate() {

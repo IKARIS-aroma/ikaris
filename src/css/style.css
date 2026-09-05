@@ -138,8 +138,24 @@ textarea:focus-visible, [tabindex]:focus-visible {
   font-size: 0.85rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  position: relative;
+  padding-bottom: 0.3em;
 }
 .main-nav a:hover { color: var(--gold); }
+/* Same underline-draw mechanism already used by .gallery__switcher-dot —
+   reused here rather than inventing a new pattern, now doing double duty:
+   drawn in on hover, and left permanently drawn for whichever section the
+   visitor is actually on (previously there was no "you are here" signal
+   in the nav at all). */
+.main-nav__underline {
+  position: absolute; left: 0; bottom: 0; height: 1px; width: 100%;
+  background: var(--gold);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.4s cubic-bezier(.16,1,.3,1);
+}
+.main-nav a:hover .main-nav__underline { transform: scaleX(1); }
+.main-nav a.is-current { color: var(--gold); }
+.main-nav a.is-current .main-nav__underline { transform: scaleX(1); }
 @media (min-width: 900px) { .main-nav { display: block; } }
 
 .header-actions { display: flex; align-items: center; gap: var(--space-2); }
@@ -157,6 +173,12 @@ textarea:focus-visible, [tabindex]:focus-visible {
   line-height: 1;
 }
 .cart-badge[hidden] { display: none; }
+.cart-badge.is-pulsing { animation: cart-badge-pulse 0.4s ease-out; }
+@keyframes cart-badge-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
 
 .nav-toggle { display: inline-flex; }
 @media (min-width: 900px) { .nav-toggle { display: none; } }
@@ -256,12 +278,22 @@ textarea:focus-visible, [tabindex]:focus-visible {
 .bottle-3d canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; touch-action: none; }
 .bottle-3d:active canvas { cursor: grabbing; }
 .bottle-3d__hint {
-  position: absolute; bottom: var(--space-2); left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: var(--space-2); left: 50%;
   font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--muted); display: flex; align-items: center; gap: 0.5em;
-  pointer-events: none; opacity: 0.85;
+  pointer-events: none; opacity: 0.85; transition: opacity 0.5s ease;
+  animation: hint-nudge 2.4s ease-in-out infinite;
 }
+/* Previously stayed on screen, static, for the whole visit — competing
+   with the bottle for attention indefinitely instead of teaching the
+   gesture once and getting out of the way. bottle-viewer.js adds
+   .is-dismissed the first time OrbitControls reports real drag input. */
+.bottle-3d__hint.is-dismissed { opacity: 0; }
 .bottle-3d__hint::before, .bottle-3d__hint::after { content: ''; width: 18px; height: 1px; background: var(--muted); }
+@keyframes hint-nudge {
+  0%, 100% { transform: translateX(-50%); }
+  50% { transform: translateX(calc(-50% + 5px)); }
+}
 .product-page__meta { position: relative; display: flex; flex-direction: column; gap: var(--space-2); }
 .product-page__meta > :not(.ghost-word) { position: relative; z-index: 1; }
 .ghost-word--meta { top: 0.2em; left: -0.03em; transform: none; font-size: clamp(2.8rem, 9vw, 5.5rem); white-space: normal; line-height: 1; max-width: 100%; }
@@ -355,6 +387,32 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
 @media (min-width: 700px) { .stat-row { grid-template-columns: repeat(4,1fr); } }
 .stat-row strong { display: block; font-family: var(--font-serif); font-size: 2rem; color: var(--gold-soft); }
 .stat-row span { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+/* --ink-2/--ink-3 were defined for a genuine three-step dark elevation
+   ladder alongside --ink, but nothing on the site actually used the two
+   raised steps — every dark surface just sat flat on --ink. This is the
+   first deliberate use of all three together: a subtle radial lift toward
+   the top of the panel instead of a flat fill. */
+.house-statement {
+  background: radial-gradient(ellipse 70% 90% at 50% 0%, var(--ink-3) 0%, var(--ink-2) 45%, var(--ink) 100%);
+  color: var(--bone);
+  text-align: center;
+}
+.house-statement__quote {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 1.1vw + 1.4rem, 2.6rem);
+  line-height: 1.3;
+  max-width: 20ch;
+  margin: 0 auto var(--space-3);
+  color: var(--bone);
+}
+.house-statement__label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
 
 /* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--line); padding: var(--space-5) 0 var(--space-3); background: var(--paper-2); }
@@ -551,11 +609,17 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 }
 
 /* Magnetic buttons */
-.btn-magnetic { position: relative; }
+/* JS (experience.js initMagnetic) writes a translate() on every mousemove
+   and resets to translate(0,0) on mouseleave — with no transition here,
+   the release snapped back in a single frame instead of settling, which
+   read as a glitch rather than a magnetic pull. The same short transition
+   also smooths the tracking itself into a slight elastic lag, which is
+   the actual effect real "magnetic button" implementations rely on. */
+.btn-magnetic { position: relative; transition: transform 0.35s cubic-bezier(.16,1,.3,1); }
 
 /* Reduced motion: strip every non-essential animation, keep content static */
 @media (prefers-reduced-motion: reduce) {
-  .grain, .glow, .preloader img { animation: none !important; }
+  .grain, .glow, .preloader img, .bottle-3d__hint, .cart-badge { animation: none !important; }
   .kinetic-line span { animation: none !important; transform: none !important; }
   .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
   .tilt-stage__inner { transition: none !important; }
@@ -799,6 +863,12 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
   text-shadow: 0 1px 3px rgba(255,252,240,0.7), 0 0 20px rgba(255,252,240,0.6);
   opacity: 0;
 }
+/* One word/phrase per caption carries the emotional weight of that line
+   ("the sun", "to weep", "the sea", "kept") — picking it out in the
+   brand's gold, rather than leaving every word the same weight, is what
+   makes the line read as authored/art-directed rather than a plain
+   caption. */
+.epic__accent { color: var(--gold); font-style: italic; }
 
 .epic__actions {
   position: absolute; z-index: 7; left: 50%; bottom: 8vh; transform: translateX(-50%);

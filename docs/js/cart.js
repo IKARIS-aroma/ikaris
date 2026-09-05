@@ -29,7 +29,7 @@
       usingFallback = true;
       memoryFallback = cart.slice();
     }
-    updateBadges(cart);
+    updateBadges(cart, true);
   }
 
   function getCart() {
@@ -46,11 +46,19 @@
     return cart.reduce(function (sum, line) { return sum + line.price * line.qty; }, 0);
   }
 
-  function updateBadges(cart) {
+  function updateBadges(cart, pulse) {
     var count = getCartCount(cart);
     document.querySelectorAll('.cart-badge').forEach(function (el) {
       el.textContent = String(count);
       el.hidden = count === 0;
+      // Only pulse on an actual mutation (writeCart passes true), never on
+      // the plain page-load sync below — a badge that bounces the instant
+      // every page loads reads as a glitch, not a confirmation.
+      if (pulse && count > 0) {
+        el.classList.remove('is-pulsing');
+        void el.offsetWidth; // restart the animation if it's already mid-pulse
+        el.classList.add('is-pulsing');
+      }
     });
   }
 

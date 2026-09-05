@@ -99,8 +99,14 @@ ${extraHead}
 </head>`;
 }
 
-function renderHeader() {
-  const navItems = NAV.map((n) => `<li><a href="${url(n.href)}">${escapeHtml(n.label)}</a></li>`).join('');
+function renderHeader(canonicalPath = '') {
+  // "Guides" should stay marked current across every individual guide
+  // article, not just the /guides/ index itself — a prefix match for that
+  // one section, exact match everywhere else (Men/Women intentionally
+  // don't extend to product pages here: a product belongs to a specific
+  // fragrance, not really "the Men page" or "the Women page").
+  const isActive = (href) => (href === '/guides/' ? canonicalPath.startsWith(href) : canonicalPath === href);
+  const navItems = NAV.map((n) => `<li><a href="${url(n.href)}"${isActive(n.href) ? ' class="is-current" aria-current="page"' : ''}>${escapeHtml(n.label)}<span class="main-nav__underline" aria-hidden="true"></span></a></li>`).join('');
   return `<a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="container site-header__bar">
@@ -194,7 +200,7 @@ ${renderGtmNoscript()}
 <div class="preloader" aria-hidden="true"><img src="${assetUrl('logo-mark.png')}" alt=""></div>
 <noscript><style>.preloader{display:none!important}</style></noscript>
 <div class="grain" aria-hidden="true"></div>
-${renderHeader()}
+${renderHeader(canonicalPath)}
 <main id="main">
 ${bodyHtml}
 </main>

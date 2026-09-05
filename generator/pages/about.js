@@ -35,6 +35,13 @@ function build() {
     </div>
   </section>
 
+  <section class="section house-statement">
+    <div class="container">
+      <p class="house-statement__quote reveal">We'd rather make ten fragrances honestly than fifty diluted ones.</p>
+      <span class="house-statement__label">The standard behind every IKARIS composition</span>
+    </div>
+  </section>
+
   <section class="section" style="border-top:1px solid var(--line)">
     <div class="container prose">
       <div class="reveal">
