@@ -139,4 +139,19 @@
   document.addEventListener('DOMContentLoaded', function () {
     updateBadges(readCart());
   });
+
+  // Cart state previously had no cross-tab sync: adding/removing an item
+  // in one tab left every other open tab (including one sitting on the
+  // cart page itself) showing stale data until its next reload. The
+  // 'storage' event fires in every OTHER same-origin tab whenever
+  // localStorage changes (never the tab that made the change, which is
+  // exactly right here since that tab already updated itself directly).
+  // Re-dispatched as an ikaris:cart-changed CustomEvent so page-specific
+  // code (the cart page's own render()) can react without cart.js needing
+  // to know anything about what's currently on screen.
+  window.addEventListener('storage', function (e) {
+    if (e.key !== CART_KEY) return;
+    updateBadges(readCart());
+    window.dispatchEvent(new CustomEvent('ikaris:cart-changed'));
+  });
 })();

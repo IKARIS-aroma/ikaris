@@ -28,23 +28,46 @@ import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 // source this small (16x8px) is a trivial mip-chain generation, not a
 // six-direction cubemap capture of actual 3D geometry.
 function makeFallbackEnvironment() {
+  // Raising the flat gradient's brightness (see the git history on this
+  // function) helped but still read dark on a real phone screen — the
+  // bottles are built with metallic:1.0 caps and metallic:0.75 bodies
+  // (see blender/build_bottles.py's clean_material calls), and a fully
+  // metallic, low-roughness PBR material has essentially ZERO diffuse
+  // response — it is a near-mirror. Its entire visible brightness comes
+  // from specular reflections of BRIGHT, DISCRETE points in whatever it's
+  // reflecting, not from the environment's average brightness. A smooth
+  // gradient has no discrete highlight to catch, so the metal reads dull
+  // and flat no matter how bright the gradient's stops are raised. Real
+  // rooms (what RoomEnvironment renders, and what the desktop path still
+  // uses) have actual light fixtures/windows as bright discrete shapes —
+  // that's what was missing here, not overall brightness.
+  const size = 64;
   const canvas = document.createElement('canvas');
-  canvas.width = 16;
-  canvas.height = 8;
+  canvas.width = size;
+  canvas.height = size / 2;
   const ctx = canvas.getContext('2d');
-  const gradient = ctx.createLinearGradient(0, 0, 0, 8);
-  // First pass at this gradient (bright top fading to a near-black
-  // bottom stop) still read noticeably darker/flatter than the desktop
-  // RoomEnvironment reference — most of a real room's environment is
-  // walls and floor lit well above black, not a shadowed void, so the
-  // bottom stop here was unrealistically dark for what it's meant to
-  // approximate. Raised every stop so the darkest reflection is a mid
-  // grey, not charcoal.
+  const gradient = ctx.createLinearGradient(0, 0, 0, size / 2);
   gradient.addColorStop(0, '#fffbf0');
   gradient.addColorStop(0.45, '#f2efe4');
   gradient.addColorStop(1, '#7d7a82');
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 16, 8);
+  ctx.fillRect(0, 0, size, size / 2);
+
+  // Two soft bright "light source" blobs standing in for a key + rim
+  // light — positioned to roughly match this file's real key/rim
+  // DirectionalLight directions below, so the specular highlight they
+  // produce on the faceted cap/body lands somewhere physically plausible
+  // rather than looking pasted-on.
+  function lightSpot(x, y, r, alpha) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(255,251,240,${alpha})`);
+    g.addColorStop(1, 'rgba(255,251,240,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  lightSpot(size * 0.7, size * 0.22, size * 0.3, 1);
+  lightSpot(size * 0.18, size * 0.42, size * 0.18, 0.55);
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.mapping = THREE.EquirectangularReflectionMapping;
   texture.colorSpace = THREE.SRGBColorSpace;

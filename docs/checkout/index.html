@@ -129,7 +129,7 @@ gtag('consent', 'default', {
             </div>
             <div class="form-field" style="margin-top:1rem;max-width:200px;">
               <label for="cf-pincode">PIN code</label>
-              <input id="cf-pincode" name="pincode" type="text" inputmode="numeric" autocomplete="postal-code" required data-clarity-mask="true">
+              <input id="cf-pincode" name="pincode" type="text" inputmode="numeric" autocomplete="postal-code" required pattern="[0-9]{6}" maxlength="6" title="6-digit PIN code" data-clarity-mask="true">
             </div>
             <button type="submit" class="btn btn-primary btn-magnetic" style="margin-top:1.5rem;" data-testid="continue-to-payment">Continue to Payment</button>
           </form>

@@ -295,6 +295,12 @@
       }
     });
 
+    // If the cart changes in another tab (cart.js's 'storage' listener
+    // re-dispatches this), pick it up here too, so a visitor with the
+    // cart page open in one tab isn't looking at stale quantities after
+    // editing the same cart from a product page in another tab.
+    window.addEventListener('ikaris:cart-changed', render);
+
     render();
   }
 
@@ -378,10 +384,24 @@
       });
     }
 
+    // pagehide fires on every navigation away from this page, not just a
+    // genuine abandonment — clicking the Cart icon to double-check the
+    // order, or a nav link to keep browsing before coming back, both
+    // trigger it too, and both used to fire a false cart_abandoned event
+    // even though the visitor never actually left the purchase journey.
+    // Any click on a link is a reasonable enough signal that this is
+    // intentional in-site navigation, not abandonment — only fire when the
+    // page is being unloaded WITHOUT having gone through a clicked link
+    // (closing the tab, typing a new address, closing the browser).
+    var navigatedViaLink = false;
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('a')) navigatedViaLink = true;
+    });
+
     window.addEventListener('pagehide', function () {
       var completed = false;
       try { completed = window.sessionStorage.getItem('ikaris_checkout_completed') === '1'; } catch (e) { /* noop */ }
-      if (!completed && cart.length > 0) {
+      if (!completed && !navigatedViaLink && cart.length > 0) {
         window.track('cart_abandoned', { currency: 'INR', value: value, items: items });
       }
     });
