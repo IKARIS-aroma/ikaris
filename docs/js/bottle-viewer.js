@@ -16,6 +16,41 @@ import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 
+// A cheap stand-in for the full RoomEnvironment PMREM pass (see the
+// isCoarsePointer branch in initViewer): the bottle's metallic/glass
+// materials get essentially all of their brightness from specular
+// environment reflections, not direct light — a HemisphereLight alone
+// (tried first) only feeds the diffuse term, so anything metallic still
+// read as near-black on phones with no environment map at all. A tiny
+// canvas gradient assigned as scene.environment still gives materials
+// something to reflect, and — unlike PMREMGenerator.fromScene(RoomEnvironment)
+// — costs no scene render: three.js's internal PMREM conversion of a
+// source this small (16x8px) is a trivial mip-chain generation, not a
+// six-direction cubemap capture of actual 3D geometry.
+function makeFallbackEnvironment() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 16;
+  canvas.height = 8;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 8);
+  // First pass at this gradient (bright top fading to a near-black
+  // bottom stop) still read noticeably darker/flatter than the desktop
+  // RoomEnvironment reference — most of a real room's environment is
+  // walls and floor lit well above black, not a shadowed void, so the
+  // bottom stop here was unrealistically dark for what it's meant to
+  // approximate. Raised every stop so the darkest reflection is a mid
+  // grey, not charcoal.
+  gradient.addColorStop(0, '#fffbf0');
+  gradient.addColorStop(0.45, '#f2efe4');
+  gradient.addColorStop(1, '#7d7a82');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 16, 8);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 function supportsWebGL() {
   try {
     const c = document.createElement('canvas');
@@ -87,15 +122,16 @@ function initViewer(container, opts) {
   // to), stacked on top of whatever the hero video's own decode is
   // costing — a very plausible cause of the WebGL/GPU-driver crashes
   // reported specifically on iOS Safari, which tolerates concurrent GPU
-  // work far worse than desktop. Skip the environment pass entirely on
-  // coarse-pointer devices and approximate the same soft fill with a
-  // hemisphere light instead: cheap (no render pass at all), at the cost
-  // of losing the glass's subtle environment reflections — the same
-  // "a little softer on a phone is fine" trade already made for
-  // antialiasing and oversample above.
+  // work far worse than desktop. Skip the RoomEnvironment scene render on
+  // coarse-pointer devices, but still assign SOME environment map — a
+  // first attempt used a HemisphereLight alone instead, and the bottle's
+  // metallic/glass materials (which draw almost all their brightness from
+  // specular env reflections, not direct diffuse light) came out looking
+  // badly underlit as a result. makeFallbackEnvironment() gives them
+  // something to reflect for essentially no GPU cost.
   let pmrem = null;
   if (isCoarsePointer) {
-    scene.add(new THREE.HemisphereLight(0xfff2d9, 0x1a1a22, 0.9));
+    scene.environment = makeFallbackEnvironment();
   } else {
     pmrem = new THREE.PMREMGenerator(renderer);
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
