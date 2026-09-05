@@ -29,6 +29,25 @@
       var breakpoint = Number(heroVideo.getAttribute('data-breakpoint')) || 700;
       var isWide = window.matchMedia('(min-width: ' + breakpoint + 'px)').matches;
       heroVideo.src = heroVideo.getAttribute(isWide ? 'data-wide-src' : 'data-tall-src');
+      heroVideo.load();
+
+      // This video is only ever *seeked* (video.currentTime = ...), never
+      // actually played — iOS Safari's decode pipeline for a preload="auto"
+      // video routinely never fully engages until .play() has been called
+      // at least once, so arbitrary currentTime seeks on a video that has
+      // literally never played can just show nothing. Muted, inline video
+      // is exempt from autoplay-gesture restrictions on every current
+      // browser (including iOS), so this succeeds without user interaction
+      // — kick it off immediately, then pause on the same tick the promise
+      // resolves so nothing actually plays.
+      heroVideo.muted = true;
+      heroVideo.playsInline = true;
+      var kickstart = heroVideo.play();
+      if (kickstart && typeof kickstart.then === 'function') {
+        kickstart.then(function () { heroVideo.pause(); }).catch(function () {});
+      } else {
+        heroVideo.pause();
+      }
     }
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

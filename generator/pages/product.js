@@ -37,7 +37,7 @@ function build(product) {
   ])}
   <div class="container">
     <div class="product-page__grid">
-      <div class="product-page__media reveal">
+      <div class="product-page__media reveal" style="--wash-color:${escapeHtml(product.render3d.capColor)}">
         <div class="tilt-stage" data-tilt-stage>
           <div class="tilt-stage__inner">${media}</div>
           <div class="tilt-stage__sheen"></div>

@@ -23,7 +23,7 @@ function renderIcarusFigure() {
   // should have matched the wide query). JS-driven src selection (see
   // icarus-cinematic.js) is the standard, reliable workaround.
   return `<div class="epic__icarus" data-epic-figure aria-hidden="true">
-    <video data-icarus-video data-wide-src="${wideMp4}" data-tall-src="${tallMp4}" data-breakpoint="${BREAKPOINT_PX}" muted playsinline preload="auto" poster="${assetUrl('icarus/icarus-01-ascend-wide.jpg')}"></video>
+    <video data-icarus-video data-wide-src="${wideMp4}" data-tall-src="${tallMp4}" data-breakpoint="${BREAKPOINT_PX}" muted playsinline webkit-playsinline preload="auto" poster="${assetUrl('icarus/icarus-01-ascend-wide.jpg')}"></video>
   </div>`;
 }
 

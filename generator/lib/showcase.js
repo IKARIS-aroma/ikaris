@@ -24,6 +24,7 @@ function showcasePanel(product, { index, isActive }) {
 
   return `<div class="showcase__panel${isActive ? ' is-active' : ''}" data-showcase-panel data-slug="${escapeAttr(product.slug)}" data-index="${index}"
     data-name="${escapeAttr(product.name)}" data-char="${escapeAttr(product.character || '')}" data-price="${product.price}" data-href="${url(`/fragrances/${product.slug}/`)}"
+    style="--wash-color:${escapeAttr(product.render3d.capColor)}"
     ${isActive ? '' : 'aria-hidden="true"'}>
     <div class="tilt-stage" data-tilt-stage><div class="tilt-stage__inner">${img}</div></div>
     ${model3d}
