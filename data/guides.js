@@ -140,7 +140,7 @@ const GUIDES = [
       },
       {
         q: 'Why do some fragrances only come in EDT, and others only in EDP?',
-        a: 'A house builds a fragrance around a specific concentration during development, and the notes are balanced for that strength. Producing the same formula at a different concentration would change the balance, so many fragrances are released in only one strength. All ten IKARIS fragrances are formulated and sold as eau de parfum only.',
+        a: 'A house builds a fragrance around a specific concentration during development, and the notes are balanced for that strength. Producing the same formula at a different concentration would change the balance, so many fragrances are released in only one strength. All six IKARIS fragrances are formulated and sold as eau de parfum only.',
       },
     ],
   },
