@@ -7,7 +7,7 @@ const fs = require('fs');
 const path_ = require('path');
 const { picture } = require('./picture');
 const { url, assetUrl } = require('./urls');
-const { escapeHtml, escapeAttr } = require('./html');
+const { escapeHtml, escapeAttr, inlineHideStaticPhotoScript } = require('./html');
 
 const MODELS_DIR = path_.join(__dirname, '..', '..', 'assets', 'models');
 
@@ -17,7 +17,8 @@ function hasModel(slug) {
 
 function showcasePanel(product, { index, isActive }) {
   const img = picture({ assetPathNoExt: `products/${product.slug}`, width: 586, height: 996, alt: product.alt, loading: index === 0 ? 'eager' : 'lazy' });
-  const model3d = hasModel(product.slug)
+  const has3D = hasModel(product.slug);
+  const model3d = has3D
     ? `<div class="bottle-3d" data-bottle-3d-lazy data-slug="${escapeAttr(product.slug)}" data-glb-url="${assetUrl(`models/bottle-${product.slug}.glb`)}" hidden aria-label="Interactive 3D model of ${escapeAttr(product.name)} — drag to rotate"></div>`
     : '';
 
@@ -26,6 +27,7 @@ function showcasePanel(product, { index, isActive }) {
     ${isActive ? '' : 'aria-hidden="true"'}>
     <div class="tilt-stage" data-tilt-stage><div class="tilt-stage__inner">${img}</div></div>
     ${model3d}
+    ${has3D ? inlineHideStaticPhotoScript() : ''}
   </div>`;
 }
 

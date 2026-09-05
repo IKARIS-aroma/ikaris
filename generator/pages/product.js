@@ -5,7 +5,7 @@ const { renderBreadcrumbs } = require('../lib/breadcrumbs');
 const { wrapGraph, organizationNode, brandNode, websiteNode, breadcrumbListNode, productNode } = require('../lib/jsonld');
 const { picture } = require('../lib/picture');
 const { url, assetUrl } = require('../lib/urls');
-const { escapeHtml } = require('../lib/html');
+const { escapeHtml, inlineHideStaticPhotoScript } = require('../lib/html');
 
 const MODELS_DIR = path_.join(__dirname, '..', '..', 'assets', 'models');
 
@@ -43,7 +43,7 @@ function build(product) {
           <div class="tilt-stage__sheen"></div>
           <div class="tilt-stage__hint">Explore</div>
         </div>
-        ${has3D ? `<div class="bottle-3d" data-bottle-3d data-slug="${escapeHtml(product.slug)}" data-glb-url="${assetUrl(`models/bottle-${product.slug}.glb`)}" data-testid="bottle-3d-viewer" hidden aria-label="Interactive 3D model of ${escapeHtml(product.name)} — drag to rotate"></div>` : ''}
+        ${has3D ? `<div class="bottle-3d" data-bottle-3d data-slug="${escapeHtml(product.slug)}" data-glb-url="${assetUrl(`models/bottle-${product.slug}.glb`)}" data-testid="bottle-3d-viewer" hidden aria-label="Interactive 3D model of ${escapeHtml(product.name)} — drag to rotate"></div>${inlineHideStaticPhotoScript()}` : ''}
       </div>
       <div class="product-page__meta reveal" style="--rd:0.15s">
         <span class="ghost-word ghost-word--meta" aria-hidden="true">${escapeHtml(product.name)}</span>
