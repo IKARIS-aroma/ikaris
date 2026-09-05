@@ -54,12 +54,27 @@ function initViewer(container, opts) {
   // resolution, then gets visibly blurred by the CSS scale stretching that
   // bitmap up. Rendering at extra pixel density up front means there's
   // already enough resolution in the bitmap for that stretch to be lossless.
-  const oversample = opts.oversample || 1;
+  //
+  // BUT: devicePixelRatio 2 (already the desktop cap) * oversample 2 = 4x
+  // pixel ratio, and iPhones commonly report devicePixelRatio 3 — before
+  // the min() cap that's a drawing buffer several million pixels larger
+  // per frame than it needs to be, re-rendered every frame by a
+  // continuous rAF loop, on top of whatever the hero video's own decode
+  // is costing at the same moment. That combination is a real, plausible
+  // cause of the "3D models crash the site on mobile" reports — coarse
+  // pointer (a reliable enough phone/tablet signal, iOS included) gets a
+  // materially cheaper render path: no oversample, capped pixel ratio, and
+  // antialiasing off (MSAA is comparatively expensive on tile-based mobile
+  // GPUs). A slightly softer bottle on a phone is a fine trade for the
+  // site not crashing.
+  const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const oversample = isCoarsePointer ? 1 : (opts.oversample || 1);
+  const pixelRatioCap = isCoarsePointer ? 1.5 : 2;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * oversample);
+  const renderer = new THREE.WebGLRenderer({ antialias: !isCoarsePointer, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap) * oversample);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
   container.appendChild(renderer.domElement);
@@ -114,13 +129,28 @@ function initViewer(container, opts) {
   // to allocate because old ones were never released).
   let raf = null;
   let ro = null;
+  let io = null;
   let disposed = false;
+  // Once revealed, this kept rendering every frame forever — including
+  // long after the visitor scrolled past it (the hero bottle stays in the
+  // DOM below the fold for the rest of the homepage; a product-page
+  // viewer stays alive for as long as that tab is open). An off-screen
+  // context burning a full render loop indefinitely is pure waste, and it
+  // was very possibly what tipped some phones over the edge into a real
+  // crash once a second viewer (e.g. a showcase panel) became active at
+  // the same time. Pause the loop while the container isn't actually
+  // visible; resume exactly where controls.autoRotate would put it.
+  // Starts false (not "assumed visible") so the IntersectionObserver's own
+  // first callback — reporting the real initial state — is what starts
+  // the loop, rather than being a no-op because isVisible already matched.
+  let isVisible = false;
 
   function dispose() {
     if (disposed) return;
     disposed = true;
     if (raf) cancelAnimationFrame(raf);
     if (ro) ro.disconnect();
+    if (io) io.disconnect();
     if (photoStage) photoStage.style.display = '';
     if (innerPhoto) innerPhoto.style.display = '';
     controls.dispose();
@@ -184,10 +214,28 @@ function initViewer(container, opts) {
         controls.update();
         renderer.render(scene, camera);
       }
-      animate();
 
       ro = new ResizeObserver(resize);
       ro.observe(container);
+
+      // Only render while actually on screen. The render loop used to run
+      // unconditionally forever once started, including long after the
+      // visitor scrolled past it — see the isVisible comment above dispose().
+      if ('IntersectionObserver' in window) {
+        io = new IntersectionObserver((entries) => {
+          var nowVisible = entries[entries.length - 1].isIntersecting;
+          if (nowVisible && !isVisible) {
+            isVisible = true;
+            if (!raf) animate();
+          } else if (!nowVisible && isVisible) {
+            isVisible = false;
+            if (raf) { cancelAnimationFrame(raf); raf = null; }
+          }
+        }, { threshold: 0.01 });
+        io.observe(container);
+      } else {
+        animate(); // no IntersectionObserver support — fall back to always-on, as before
+      }
 
       window.addEventListener('beforeunload', dispose);
       if (opts.onReady) opts.onReady(handle);

@@ -157,11 +157,11 @@
           }
 
           cue.classList.toggle('is-hidden', p > 0.04);
-          actions.classList.toggle('is-live', p > 0.88);
+          actions.classList.toggle('is-live', p > 0.82);
           // Starts loading earlier (was 0.75) now that the reveal itself
-          // starts at 0.80 — the GLB needs real lead time to fetch/parse
+          // starts at 0.74 — the GLB needs real lead time to fetch/parse
           // before it's actually due on screen.
-          if (p > 0.68) initBottle();
+          if (p > 0.62) initBottle();
 
           // Clouds drift on their own via CSS, but also parallax with
           // scroll so the sky itself feels like it's moving as you move,
@@ -185,14 +185,14 @@
       });
     }
 
-    // Fully gone by 80 — previously faded 82-88 while the real bottle was
+    // Fully gone by 74 — previously faded 82-88 while the real bottle was
     // ALSO fading in from 78, so for a 6-point stretch the illustrated
     // (teal, hand-drawn) bottle in the video and the real 3D (dark,
     // faceted) product bottle were both on screen in the same spot at
     // once. Confirmed live: a visible double-bottle overlap right at the
     // supposed "transformation" moment, undercutting the one beat that's
     // supposed to read as a clean reveal.
-    tl.to(figure, { opacity: 0, duration: 12 }, 68);
+    tl.to(figure, { opacity: 0, duration: 10 }, 64);
 
     // Ocean rises into frame as Icarus falls, settles once he's in it.
     // Start nudged from 38 to 34 to close part of the same lag the phase
@@ -210,15 +210,20 @@
       .to(particles, { opacity: 0, duration: 8 }, 62);
 
     // Rebirth: the real bottle grows from nothing exactly as the
-    // illustrated one finishes fading (80, right after figure above),
-    // then closes the distance until it fills the screen at 100%. Three
-    // strictly back-to-back segments (78->88->94->100, whereas the old
-    // 78/90/96 numbers overlapped 90-96 and 96-100) — two tweens fighting
-    // over the same `scale` property in that overlap produced a small but
-    // real speed hitch right at the payoff.
-    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 8 }, 80)
-      .to(bottleEl, { scale: 1.7, duration: 6 }, 88)
-      .to(bottleEl, { scale: 3.4, duration: 6 }, 94);
+    // illustrated one finishes fading (74, right after figure above), then
+    // closes the distance until it fills the screen — but finishes at 92,
+    // not 100. The payoff used to complete exactly as the pin released,
+    // so the fully-revealed bottle was on screen for a single instant
+    // before scrolling straight into the next section ("the last frame is
+    // too short, barely visible" — confirmed: zero dwell time at the end).
+    // Holding the final scale from 92-100 gives it a full 8 points of
+    // scroll to actually be seen. Three strictly back-to-back segments
+    // (74->81->86->92, not overlapping) — the old 78/90/96 numbers
+    // overlapped 90-96 and 96-100, two tweens fighting over the same
+    // `scale` property, which produced a small but real speed hitch.
+    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 7 }, 74)
+      .to(bottleEl, { scale: 1.7, duration: 5 }, 81)
+      .to(bottleEl, { scale: 3.4, duration: 6 }, 86);
 
     // Captions, keyed to the actual baked video beat windows (see
     // generator/build-icarus-video.js: CLIP_DUR=3.6, XFADE=0.6, 5 beats ->
@@ -247,13 +252,14 @@
     // myth-to-product hinge (why is there a bottle underwater?) and was
     // previously left entirely to inference.
     if (sub(3)) tl.to(sub(3), { opacity: 1, duration: 4 }, 56).to(sub(3), { opacity: 0, duration: 4 }, 66);
-    // Starts right as the real bottle begins fading in below (80) — the
-    // line and the reveal land together — and clears out at 90, before the
-    // bottle's biggest scale-up, so it never overlaps the bottle's neck/cap
-    // the way the unconditional "stay visible to 100%" version used to.
-    if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 80).to(line(1), { opacity: 0, duration: 4 }, 90);
+    // Starts right as the real bottle begins fading in below (74) — the
+    // line and the reveal land together — and clears out at 84, before the
+    // bottle's biggest scale-up (86->92), so it never overlaps the
+    // bottle's neck/cap the way the unconditional "stay visible to 100%"
+    // version used to.
+    if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 74).to(line(1), { opacity: 0, duration: 4 }, 84);
 
-    tl.to(actions, { opacity: 1, duration: 6 }, 90);
+    tl.to(actions, { opacity: 1, duration: 6 }, 84);
   }
 
   function initGallerySwitcher() {
