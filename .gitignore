@@ -30,3 +30,9 @@ node_modules/
 # outputs already live in assets/ and are tracked normally.
 /icarus-src/
 /video-gen-source/
+
+# Intermediate master renders from blender/build_bottles.py's
+# render_product_shot() — generator/build-product-renders.js crops/resizes
+# these into the actual site assets (assets/products/, assets/thumbs/),
+# which are tracked normally. Regeneratable from the same GLB scene.
+/assets/renders/

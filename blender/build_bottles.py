@@ -22,9 +22,17 @@ from mathutils import Vector
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PARAMS_PATH = os.path.join(ROOT, "blender", "bottle-params.json")
 OUT_DIR = os.path.join(ROOT, "assets", "models")
+RENDERS_DIR = os.path.join(ROOT, "assets", "renders")
 SOURCE_FBX = os.path.join(ROOT, "source", "untitled.fbx")
 TEX_DIR = os.path.join(ROOT, "textures")
 SCALE = 1.0
+# Matches the interactive Three.js viewer's PerspectiveCamera(32, ...) so a
+# static render frames the bottle the same way the live 3D viewer does —
+# the whole point is that swapping from this static image to the real
+# viewer should look like the SAME shot starting to rotate, not a jump cut
+# to a different-looking product photo.
+CAMERA_FOV_DEG = 32
+RENDER_W, RENDER_H = 1400, 2380  # tall master shot; generator/build-product-renders.js crops/resizes into the site's actual asset sizes
 
 
 def hex_to_rgb(h):
@@ -211,6 +219,99 @@ def build_bottle(p):
     out_path = os.path.join(OUT_DIR, f"bottle-{p['slug']}.glb")
     bpy.ops.export_scene.gltf(filepath=out_path, export_format='GLB', export_materials='EXPORT', export_apply=True)
     print("EXPORTED:", out_path)
+
+    # Camera/lights are added AFTER export so they never end up baked into
+    # the glTF (which exports the whole scene collection, not a selection).
+    render_product_shot(p['slug'], body, cap, p['capColor'])
+
+
+def add_tracked_light(name, energy, color, location, target):
+    light_data = bpy.data.lights.new(name, type='SUN')
+    light_data.energy = energy
+    light_data.color = color
+    light_data.angle = math.radians(3)  # soft-ish shadow edge, not a pinpoint hard sun
+    obj = bpy.data.objects.new(name, light_data)
+    obj.location = Vector(location)
+    obj.rotation_euler = (target - obj.location).to_track_quat('-Z', 'Y').to_euler()
+    bpy.context.collection.objects.link(obj)
+    return obj
+
+
+def render_product_shot(slug, body, cap, cap_color_hex):
+    """A static hero shot of the SAME model/materials/label the interactive
+    viewer loads, framed with the interactive viewer's own camera math
+    (see CAMERA_FOV_DEG) — this replaces the old separately-photographed
+    (AI-generated) product images, which showed a differently-lit,
+    differently-framed bottle. Swapping this static image out for the live
+    3D viewer once it loads should read as "the same shot starting to move",
+    not a jump cut to an unrelated picture."""
+    (bx0, bx1), (by0, by1), (bz0, bz1) = world_bounds(body)
+    (cx0, cx1), (cy0, cy1), (cz0, cz1) = world_bounds(cap)
+    size_x = max(bx1, cx1) - min(bx0, cx0)
+    size_y = max(by1, cy1) - min(by0, cy0)
+    size_z = max(bz1, cz1) - min(bz0, cz0)  # total height, base at z=0
+    center_z = size_z / 2
+
+    radius = max(size_x, size_y, size_z) * 0.62
+    dist = radius / math.tan(math.radians(CAMERA_FOV_DEG) / 2)
+
+    cam_data = bpy.data.cameras.new("ProductCam")
+    cam_data.lens_unit = 'FOV'
+    cam_data.angle = math.radians(CAMERA_FOV_DEG)
+    cam_obj = bpy.data.objects.new("ProductCam", cam_data)
+    bpy.context.collection.objects.link(cam_obj)
+    # The label wraps the body centred on the -Y face (see the label-strip
+    # loop above: theta=0 -> y_pos=-wrap_radius), so the camera sits on -Y
+    # to shoot it face-on, matching a normal product-photo convention.
+    cam_target = Vector((0, 0, center_z + size_z * 0.08))
+    cam_obj.location = Vector((0, -dist, center_z + size_z * 0.08))
+    cam_obj.rotation_euler = (cam_target - cam_obj.location).to_track_quat('-Z', 'Y').to_euler()
+    bpy.context.scene.camera = cam_obj
+
+    # The cap/label material's own colour drives how much light comes back
+    # at the camera — fixed light energies tuned by eye against the dark
+    # products (noir, vesper, ...) badly overexposed opalite's pale
+    # #cfc6ae cap and label plaque (confirmed: opalite is the one outlier
+    # capColor with luminance ~0.76 vs ~0.03-0.37 for the rest). Scale the
+    # LIGHTS down for anything lighter than that range — not a global
+    # scene exposure/view-transform adjustment, which would just as evenly
+    # dim the world backdrop's own colour along with the bottle, undoing
+    # the warm-cream studio background for no reason.
+    r, g, b = hex_to_rgb(cap_color_hex)
+    luminance = max((r + g + b) / 3, 0.05)
+    light_scale = min(1.0, 0.35 / luminance)
+
+    target = Vector((0, 0, center_z))
+    add_tracked_light("Key", energy=4.5 * light_scale, color=(1.0, 0.95, 0.85), location=(3, -4, center_z + size_z * 0.6), target=target)
+    add_tracked_light("Rim", energy=2.2 * light_scale, color=(0.79, 0.84, 1.0), location=(-3, 1.5, center_z + size_z * 0.4), target=target)
+    add_tracked_light("Fill", energy=1.0 * light_scale, color=(1.0, 1.0, 1.0), location=(0, -2, center_z - size_z * 0.3), target=target)
+
+    world = bpy.data.worlds.new("Studio")
+    world.use_nodes = True
+    bg = world.node_tree.nodes.get("Background")
+    bg.inputs[0].default_value = (0.945, 0.933, 0.906, 1.0)  # warm neutral studio backdrop, close to the site's cream paper tone
+    bg.inputs[1].default_value = 0.9
+    bpy.context.scene.world = world
+
+    scene = bpy.context.scene
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = 128
+    scene.cycles.use_denoising = True
+    scene.render.resolution_x = RENDER_W
+    scene.render.resolution_y = RENDER_H
+    scene.render.film_transparent = False
+
+    # Standard, not Blender's default Filmic/AgX view transform — those
+    # desaturate/wash out colours against a light background (confirmed
+    # the hard way on this same asset earlier in this project).
+    scene.view_settings.view_transform = 'Standard'
+    scene.render.image_settings.file_format = 'PNG'
+
+    os.makedirs(RENDERS_DIR, exist_ok=True)
+    out_path = os.path.join(RENDERS_DIR, f"{slug}.png")
+    scene.render.filepath = out_path
+    bpy.ops.render.render(write_still=True)
+    print("RENDERED:", out_path)
 
 
 def main():
