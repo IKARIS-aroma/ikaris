@@ -15,6 +15,13 @@
 (function () {
   'use strict';
 
+  // Shared by every animated feature in this file. initEpic() already
+  // checked this before it grew a second reference in this module, but
+  // initGallerySwitcher() and initShowcase()'s panel-fade tweens never did
+  // — they only fell back to non-animated behaviour when GSAP itself was
+  // missing, never for a stated reduced-motion preference.
+  var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   function initEpic() {
     var root = document.querySelector('[data-epic]');
     if (!root) return;
@@ -25,10 +32,15 @@
     // children at all (see icarus-figure.js). Runs before the reduced-
     // motion/no-GSAP checks below so the right video is set regardless.
     var heroVideo = root.querySelector('[data-icarus-video]');
-    if (heroVideo && !heroVideo.currentSrc) {
+
+    function currentBreakpointSrc() {
       var breakpoint = Number(heroVideo.getAttribute('data-breakpoint')) || 700;
       var isWide = window.matchMedia('(min-width: ' + breakpoint + 'px)').matches;
-      heroVideo.src = heroVideo.getAttribute(isWide ? 'data-wide-src' : 'data-tall-src');
+      return heroVideo.getAttribute(isWide ? 'data-wide-src' : 'data-tall-src');
+    }
+
+    function loadVideoSource() {
+      heroVideo.src = currentBreakpointSrc();
       heroVideo.load();
 
       // This video is only ever *seeked* (video.currentTime = ...), never
@@ -50,7 +62,9 @@
       }
     }
 
-    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (heroVideo && !heroVideo.currentSrc) loadVideoSource();
+
+    var reduceMotion = prefersReducedMotion;
     var hasGSAP = !!(window.gsap && window.ScrollTrigger);
 
     if (reduceMotion || !hasGSAP) {
@@ -183,6 +197,29 @@
       video.addEventListener('loadedmetadata', function () {
         video.currentTime = tl.scrollTrigger.progress * video.duration;
       });
+
+      // The wide/tall source was previously picked once and never
+      // reconsidered — rotating a phone mid-scroll (or resizing a desktop
+      // window across the breakpoint) kept showing the wrong-aspect cut
+      // for the rest of that session. Re-check on resize/orientation
+      // change; only actually swap (and re-seek to the current scroll
+      // progress) when the correct source has genuinely changed.
+      var resizeTimer = null;
+      function maybeSwapVideoSource() {
+        var wanted = currentBreakpointSrc();
+        if (video.getAttribute('src') === wanted) return;
+        var progress = tl.scrollTrigger.progress;
+        loadVideoSource();
+        video.addEventListener('loadedmetadata', function onceMeta() {
+          video.removeEventListener('loadedmetadata', onceMeta);
+          video.currentTime = progress * video.duration;
+        });
+      }
+      window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(maybeSwapVideoSource, 250);
+      });
+      window.addEventListener('orientationchange', maybeSwapVideoSource);
     }
 
     // Fully gone by 74 — previously faded 82-88 while the real bottle was
@@ -274,7 +311,7 @@
       });
       sets.forEach(function (s) {
         var match = s.getAttribute('data-gallery-set') === gender;
-        if (!window.gsap || !animate) {
+        if (!window.gsap || !animate || prefersReducedMotion) {
           s.hidden = !match;
           return;
         }
@@ -380,7 +417,7 @@
         var active = panels[current];
         panels.forEach(function (p, idx) {
           var isActive = idx === current;
-          if (window.gsap) {
+          if (window.gsap && !prefersReducedMotion) {
             gsap.to(p, { opacity: isActive ? 1 : 0, duration: 0.4 });
           } else {
             p.classList.toggle('is-active', isActive);

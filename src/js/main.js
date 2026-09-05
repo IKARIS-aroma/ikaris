@@ -15,6 +15,23 @@
 
   var BASE = document.body.dataset.basePath || '';
 
+  // cart.js falls back to an in-memory array when localStorage throws
+  // (Safari private browsing, storage blocked in settings, quota full) —
+  // but nothing ever surfaced that to the visitor. The fallback array is a
+  // module-scoped var, so it can't survive a page navigation; in a session
+  // where storage is genuinely unavailable, the cart silently "empties
+  // itself" between the product page and the cart page with zero
+  // explanation. Show a small, dismissible-by-being-informational notice
+  // wherever the cart actually matters (cart + checkout).
+  function insertFallbackNoticeIfNeeded(beforeEl) {
+    if (!beforeEl || !window.IKARIS_CART || !window.IKARIS_CART.isUsingFallback || !window.IKARIS_CART.isUsingFallback()) return;
+    var notice = document.createElement('div');
+    notice.className = 'disclosure-box';
+    notice.setAttribute('data-testid', 'cart-storage-fallback-notice');
+    notice.textContent = "Your browser is blocking saved data for this site, so your cart won't carry over between pages. Add everything you want in one visit before checking out.";
+    beforeEl.parentNode.insertBefore(notice, beforeEl);
+  }
+
   // ---------- Mobile nav ----------
   function initMobileNav() {
     var toggle = document.querySelector('[data-nav-toggle]');
@@ -185,6 +202,8 @@
     var summaryWrap = document.querySelector('[data-cart-summary]');
     if (!tableBody) return;
 
+    insertFallbackNoticeIfNeeded(document.querySelector('[data-cart-table]') || emptyState);
+
     function render() {
       cart = window.IKARIS_CART.getCart();
       tableBody.innerHTML = '';
@@ -245,6 +264,20 @@
   // ---------- Checkout page ----------
   function initCheckoutPage() {
     if (document.body.dataset.pageType !== 'checkout') return;
+
+    // If this exact page instance is restored from bfcache (routine in
+    // Safari/Firefox, increasingly Chrome) after a completed order, its
+    // in-memory JS state — including an already-re-enabled Place Order
+    // button — comes back frozen exactly as it was pre-submit. Clicking it
+    // again would re-fire a second purchase (a fresh transaction_id, since
+    // that's generated on /order-confirmed/) against a cart that's already
+    // been cleared. Force a reload so this function re-runs fresh instead —
+    // it already renders the correct empty-cart state below when the cart
+    // is actually empty.
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) window.location.reload();
+    });
+
     var cart = window.IKARIS_CART.getCart();
     var emptyState = document.querySelector('[data-checkout-empty]');
     var form = document.querySelector('[data-checkout-form]');
@@ -256,6 +289,8 @@
       if (form) form.hidden = true;
       return;
     }
+
+    insertFallbackNoticeIfNeeded(form);
 
     var value = window.IKARIS_CART.getCartTotal(cart);
     var items = cart.map(function (l, i) { return window.IKARIS_CART.toItemPayload(l, i); });

@@ -144,6 +144,7 @@ function initViewer(container, opts) {
   // first callback — reporting the real initial state — is what starts
   // the loop, rather than being a no-op because isVisible already matched.
   let isVisible = false;
+  let onPageHide = null;
 
   function dispose() {
     if (disposed) return;
@@ -151,6 +152,7 @@ function initViewer(container, opts) {
     if (raf) cancelAnimationFrame(raf);
     if (ro) ro.disconnect();
     if (io) io.disconnect();
+    if (onPageHide) window.removeEventListener('pagehide', onPageHide);
     if (photoStage) photoStage.style.display = '';
     if (innerPhoto) innerPhoto.style.display = '';
     controls.dispose();
@@ -237,7 +239,14 @@ function initViewer(container, opts) {
         animate(); // no IntersectionObserver support — fall back to always-on, as before
       }
 
-      window.addEventListener('beforeunload', dispose);
+      // pagehide, not beforeunload: the latter is a well-known bfcache
+      // disqualifier in most browsers (and was never removed on dispose,
+      // so every successful GLB load — each showcase panel switch
+      // included — left one more listener behind). pagehide fires on both
+      // a real unload and a bfcache-eligible navigation without blocking
+      // the cache, and this one *is* cleaned up in dispose().
+      onPageHide = dispose;
+      window.addEventListener('pagehide', onPageHide);
       if (opts.onReady) opts.onReady(handle);
     },
     undefined,

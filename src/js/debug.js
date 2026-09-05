@@ -12,6 +12,21 @@
     return id.slice(0, 4) + '••••' + id.slice(-3);
   }
 
+  // Attribution data (first/last touch, UTM params) traces back to raw query
+  // string values an attacker fully controls, and flows from there into
+  // purchase events' first_touch_source/last_touch_source too. innerHTML
+  // parses markup even inside <pre>, so a JSON.stringify'd value containing
+  // "<img src=x onerror=...>" as e.g. utm_source becomes real, executing
+  // markup the moment this debug page is opened — a textbook stored-XSS
+  // path. Escape before interpolating instead of using textContent
+  // everywhere, to keep the existing string-building style intact.
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function renderConfig() {
     var cfg = window.IKARIS.CONFIG;
     var rows = [
@@ -59,20 +74,20 @@
     var first = window.IKARIS.getFirstTouch();
     var last = window.IKARIS.getLastTouch();
     document.getElementById('debug-attribution').innerHTML =
-      '<h3>First touch</h3><pre>' + JSON.stringify(first, null, 2) + '</pre>' +
-      '<h3>Last touch</h3><pre>' + JSON.stringify(last, null, 2) + '</pre>';
+      '<h3>First touch</h3><pre>' + escapeHtml(JSON.stringify(first, null, 2)) + '</pre>' +
+      '<h3>Last touch</h3><pre>' + escapeHtml(JSON.stringify(last, null, 2)) + '</pre>';
   }
 
   function renderCart() {
     var cart = window.IKARIS_CART.getCart();
-    document.getElementById('debug-cart').innerHTML = '<pre>' + JSON.stringify(cart, null, 2) + '</pre>';
+    document.getElementById('debug-cart').innerHTML = '<pre>' + escapeHtml(JSON.stringify(cart, null, 2)) + '</pre>';
   }
 
   function renderEventLog() {
     var log = window.IKARIS.readEventLog();
     var tbody = document.getElementById('debug-events');
     tbody.innerHTML = log.map(function (evt) {
-      return '<tr><td>' + evt.timestamp + '</td><td>' + evt.event + '</td><td><pre>' + JSON.stringify(evt, null, 2) + '</pre></td></tr>';
+      return '<tr><td>' + escapeHtml(evt.timestamp) + '</td><td>' + escapeHtml(evt.event) + '</td><td><pre>' + escapeHtml(JSON.stringify(evt, null, 2)) + '</pre></td></tr>';
     }).join('') || '<tr><td colspan="3">No events yet this session.</td></tr>';
   }
 

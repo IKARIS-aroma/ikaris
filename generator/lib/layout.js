@@ -192,6 +192,7 @@ ${head}
 <body data-page-type="${escapeAttr(pageType)}" data-page-category="${escapeAttr(pageCategory)}" data-page-slug="${escapeAttr(pageSlug)}" data-base-path="${escapeAttr(require('../../data/site').BASE_PATH)}">
 ${renderGtmNoscript()}
 <div class="preloader" aria-hidden="true"><img src="${assetUrl('logo-mark.png')}" alt=""></div>
+<noscript><style>.preloader{display:none!important}</style></noscript>
 <div class="grain" aria-hidden="true"></div>
 ${renderHeader()}
 <main id="main">
