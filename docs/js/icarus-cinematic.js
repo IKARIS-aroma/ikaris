@@ -90,6 +90,29 @@
       });
     }
 
+    // iOS Safari's video decoder gets stuck showing a blank frame (or
+    // destabilizes the whole tab) under a sustained ~60/sec currentTime
+    // write rate — a known limitation specific to scroll-scrubbed video on
+    // iOS, not something desktop hardware decoders struggle with. Even
+    // gating writes to one per rendered frame isn't enough margin on that
+    // hardware; community fixes for this exact pattern throttle to
+    // roughly half the frame rate. onUpdate just records the latest
+    // progress (cheap); this loop applies it at ~30/sec, comfortably
+    // smooth for slow Ken-Burns-style motion while giving iOS's decoder
+    // real breathing room between seeks.
+    var pendingProgress = null;
+    var lastSeekAt = 0;
+    var MIN_SEEK_INTERVAL_MS = 33;
+    function videoSeekLoop(now) {
+      requestAnimationFrame(videoSeekLoop);
+      if (pendingProgress === null || !video || !video.duration) return;
+      if (now - lastSeekAt < MIN_SEEK_INTERVAL_MS) return;
+      lastSeekAt = now;
+      video.currentTime = pendingProgress * video.duration;
+      pendingProgress = null;
+    }
+    requestAnimationFrame(videoSeekLoop);
+
     var tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
@@ -123,8 +146,8 @@
           // video already contains its own Ken Burns pans and crossfades
           // between the five story beats (built via ffmpeg — see
           // assets/icarus/icarus-hero-*.mp4), so there's nothing else to
-          // animate here.
-          if (video && video.duration) video.currentTime = p * video.duration;
+          // animate here. The actual seek happens in videoSeekLoop above.
+          pendingProgress = p;
         },
       },
     });
