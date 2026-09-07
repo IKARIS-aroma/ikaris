@@ -12,9 +12,13 @@
 // ascend beats themselves, which stay quick (FAST_XFADE) per explicit
 // request ("the first part with the flapping wings can be fast"). Matches
 // the two source-image variants (wide 16:9 desktop, tall 9:16 mobile)
-// already used by icarus-figure.js.
+// already used by icarus-figure.js — the tall ones are NOT a crop of the
+// wide art (a 9:16 sliver of a 16:9 composition loses most of the
+// wingspan); see generator/prepare-icarus-frames.js, which must be run
+// first to populate video-gen-source/ from the raw artwork.
 //
-// Requires ffmpeg on PATH. Run: node generator/build-icarus-video.js
+// Requires ffmpeg on PATH and video-gen-source/ already populated (run
+// generator/prepare-icarus-frames.js first). Run: node generator/build-icarus-video.js
 const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
