@@ -3,11 +3,12 @@
 // variants + 1 peak + 2 fall variants + impact + seabed + rise, replacing
 // the previous 5-beat set 1:1 in narrative shape — ascend/peak/fall/ocean/
 // rise — just with richer coverage of the ascend and fall beats). Each beat
-// gets an actual directional Ken Burns pan (not a centered zoom) — the
-// start/end crop-window fractions below were chosen by eye against each
-// source image so the camera follows the figure (and, in the water beats,
-// the sea) instead of drifting into blank paper. Beats are crossfaded into
-// one continuous clip per orientation, matching the two source-image
+// is a completely static frame, no per-beat Ken Burns pan (dropped per
+// explicit request — the pans read as unwanted "movement" against the
+// user's intent for the artwork to hold still); the beats are crossfaded
+// into one continuous clip per orientation with a long dissolve (see XFADE)
+// so scrubbing through them still feels like a continuous interactive
+// video rather than a slideshow of hard cuts. Matches the two source-image
 // variants (wide 16:9 desktop, tall 9:16 mobile) already used by
 // icarus-figure.js.
 //
@@ -21,95 +22,33 @@ const SRC_DIR = path.join(ROOT, 'video-gen-source');
 const OUT_DIR = path.join(ROOT, 'assets', 'icarus');
 
 const FPS = 25;
-// Shortened from 3.6/0.6 (the old 5-beat set's timings) now that there are
-// twice as many beats — holding those durations would have doubled the
-// video's length and, per the brief's own encoding-risk warning, this
-// dense cross-hatched line art is already the worst case for a video
-// codec's bitrate budget.
-const CLIP_DUR = 1.8; // seconds each beat is fully on-screen before the next crossfade starts
-const XFADE = 0.35; // seconds crossfaded into the next beat
+// A long crossfade relative to the hold is what makes a static-frame
+// sequence still read as one continuous "video" under scroll-scrubbing
+// instead of a slideshow — XFADE is a substantial fraction of even the
+// short beats' own duration (previously a quick 0.35s snap against a 1.8s
+// hold, back when each beat also had its own Ken Burns pan providing
+// continuous motion on its own).
+const XFADE = 1.0; // seconds crossfaded into the next beat
+const SHORT_DUR = 2.0; // ascend/peak/fall/impact/seabed — short enough that it's mostly crossfade, deliberately: reads as continuous flow rather than a hard hold
+const LONG_DUR = 7.0; // rise + surface — the emotional close before the real bottle reveal, held a lot longer per explicit request
 
-// x/y are [start, end] fractions describing where the ACTION appears ON
-// SCREEN (0 = pinned to that edge of the frame, 1 = the opposite edge,
-// 0.5 = centered) — e.g. x:[0,1] means the subject drifts from the left
-// edge of frame to the right edge over the clip.
-//
-// This is the inverse of the crop window's own position in the source
-// (moving the window right reveals content further right in the source,
-// which makes anything centered in the source appear to slide LEFT on
-// screen) — buildVariant() below flips these on-screen fractions into
-// window-position fractions when it builds the actual crop expression, so
-// don't pre-flip these; write them as "where should this be on screen."
 const BEATS = [
-  {
-    file: '01-ascend1', scale: 1.25,
-    // rising toward the sun, centered
-    wide: { x: [0.5, 0.5], y: [0.85, 0.6] },
-    tall: { x: [0.5, 0.5], y: [0.85, 0.6] },
-  },
-  {
-    file: '02-ascend2', scale: 1.25,
-    wide: { x: [0.5, 0.5], y: [0.6, 0.4] },
-    tall: { x: [0.5, 0.5], y: [0.6, 0.4] },
-  },
-  {
-    file: '03-ascend3', scale: 1.25,
-    wide: { x: [0.5, 0.5], y: [0.4, 0.22] },
-    tall: { x: [0.5, 0.5], y: [0.4, 0.22] },
-  },
-  {
-    file: '04-peak', scale: 1.35,
-    // the hubris climax — tight on his face turned up into the sun
-    wide: { x: [0.5, 0.5], y: [0.55, 0.3] },
-    tall: { x: [0.5, 0.5], y: [0.55, 0.3] },
-  },
-  {
-    file: '05-fall1', scale: 1.2,
-    // badge-patch seam sits in the extreme top-left corner of this source —
-    // keep x/y fractions away from [0,0] all clip long so the window never
-    // reaches it, rather than trusting the patch to be invisible at 100% zoom
-    wide: { x: [0.45, 0.55], y: [0.2, 0.55] },
-    tall: { x: [0.45, 0.55], y: [0.2, 0.55] },
-  },
-  {
-    file: '06-fall2', scale: 1.25,
-    wide: { x: [0.5, 0.5], y: [0.3, 0.75] },
-    tall: { x: [0.5, 0.5], y: [0.3, 0.75] },
-  },
-  {
-    file: '07-impact', scale: 1.2,
-    // same badge-patch caution as 05-fall1
-    wide: { x: [0.5, 0.6], y: [0.35, 0.7] },
-    tall: { x: [0.5, 0.6], y: [0.35, 0.7] },
-  },
-  {
-    file: '08-seabed', scale: 1.3,
-    // reaching down-right toward the bottle on the seabed
-    wide: { x: [0.3, 0.6], y: [0.2, 0.7] },
-    tall: { x: [0.35, 0.6], y: [0.2, 0.7] },
-  },
-  {
-    file: '09-rise', scale: 1.25,
-    // rising through the water, bottle held overhead
-    wide: { x: [0.5, 0.5], y: [0.75, 0.35] },
-    tall: { x: [0.5, 0.5], y: [0.75, 0.35] },
-  },
-  {
-    file: '10-surface', scale: 1.2,
-    // breaking the surface, bottle raised to the sun — the hold before the real 3D reveal
-    wide: { x: [0.45, 0.55], y: [0.6, 0.25] },
-    tall: { x: [0.45, 0.55], y: [0.6, 0.25] },
-  },
+  { file: '01-ascend1', dur: SHORT_DUR },
+  { file: '02-ascend2', dur: SHORT_DUR },
+  { file: '03-ascend3', dur: SHORT_DUR },
+  { file: '04-peak', dur: SHORT_DUR },
+  { file: '05-fall1', dur: SHORT_DUR },
+  { file: '06-fall2', dur: SHORT_DUR },
+  { file: '07-impact', dur: SHORT_DUR },
+  { file: '08-seabed', dur: SHORT_DUR },
+  { file: '09-rise', dur: LONG_DUR },
+  { file: '10-surface', dur: LONG_DUR },
 ];
 
 const VARIANTS = {
   wide: { w: 960, h: 540 },
   tall: { w: 540, h: 960 },
 };
-
-function even(n) {
-  return Math.round(n / 2) * 2;
-}
 
 function buildFilterComplex(variant) {
   const { w, h } = VARIANTS[variant];
@@ -119,39 +58,33 @@ function buildFilterComplex(variant) {
 
   BEATS.forEach((beat, i) => {
     const imgPath = path.join(SRC_DIR, `${beat.file}-${variant}.png`);
-    inputs.push('-loop', '1', '-t', String(CLIP_DUR), '-i', imgPath);
+    inputs.push('-loop', '1', '-t', String(beat.dur), '-i', imgPath);
 
-    const OW = even(w * beat.scale);
-    const OH = even(h * beat.scale);
-    // Flip on-screen fractions into crop-window fractions: sliding the
-    // window RIGHT reveals more of the source's right side, which pushes
-    // anything centered in the source toward the LEFT of frame — the
-    // opposite of the on-screen motion BEATS describes. Invert (1 - f) so
-    // "x: [0, 1]" above really does read as "left edge to right edge".
-    const [sx0, sx1] = beat[variant].x;
-    const [sy0, sy1] = beat[variant].y;
-    const x0 = 1 - sx0, x1 = 1 - sx1;
-    const y0 = 1 - sy0, y1 = 1 - sy1;
-    const xExpr = `(${OW}-${w})*(${x0}+(${x1 - x0})*t/${CLIP_DUR})`;
-    const yExpr = `(${OH}-${h})*(${y0}+(${y1 - y0})*t/${CLIP_DUR})`;
     const label = `v${i}`;
-
+    // Static centered cover-crop to the output canvas — no time-varying
+    // crop window, so the frame genuinely holds still for its full duration.
     filters.push(
-      `[${i}:v]scale=${OW}:${OH}:force_original_aspect_ratio=increase,` +
-      `crop=${OW}:${OH},` +
-      `crop=w=${w}:h=${h}:x='${xExpr}':y='${yExpr}',` +
+      `[${i}:v]scale=${w}:${h}:force_original_aspect_ratio=increase,` +
+      `crop=${w}:${h},` +
       `fps=${FPS},format=yuv420p,setsar=1[${label}]`
     );
     labels.push(label);
   });
 
+  // Cumulative offset for the Nth crossfade = total duration of clips
+  // 1..N (their own lengths, not yet overlapped) minus N*XFADE (each
+  // completed crossfade before it has already pulled the timeline back by
+  // one XFADE) — this is what lets beats have different lengths at all;
+  // the old uniform i*(CLIP_DUR-XFADE) was just this formula's special case.
   const xfadeFilters = [];
   let prevLabel = labels[0];
+  let cumulative = BEATS[0].dur;
   for (let i = 1; i < labels.length; i++) {
     const outLabel = i === labels.length - 1 ? 'vout' : `x${i}`;
-    const offset = (i * (CLIP_DUR - XFADE)).toFixed(3);
+    const offset = (cumulative - i * XFADE).toFixed(3);
     xfadeFilters.push(`[${prevLabel}][${labels[i]}]xfade=transition=fade:duration=${XFADE}:offset=${offset}[${outLabel}]`);
     prevLabel = outLabel;
+    cumulative += BEATS[i].dur;
   }
 
   return { inputs, filterComplex: filters.concat(xfadeFilters).join(';'), beatCount: filters.length, xfadeCount: xfadeFilters.length };
