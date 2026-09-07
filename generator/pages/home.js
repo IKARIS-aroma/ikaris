@@ -33,7 +33,6 @@ function build() {
       <span class="epic__cloud epic__cloud--3"></span>
     </div>
     <div class="epic__vignette" aria-hidden="true"></div>
-    <div class="epic__sun" aria-hidden="true"></div>
 
     <div class="epic__ocean" data-epic-ocean aria-hidden="true">
       <svg viewBox="0 0 1200 220" preserveAspectRatio="none">

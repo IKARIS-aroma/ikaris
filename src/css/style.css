@@ -714,35 +714,6 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 .epic__cloud--3 { width: 30vw; height: 11vh; top: 5%; left: 60%; opacity: 0.65; animation: epic-cloud-drift 88s linear infinite; animation-delay: -55s; }
 @keyframes epic-cloud-drift { from { transform: translateX(0); } to { transform: translateX(135vw); } }
 
-.epic__sun {
-  position: absolute; z-index: 2; top: 8%; right: 12%;
-  width: 150px; height: 150px;
-  opacity: 0.92; transition: opacity 1.2s ease;
-}
-@media (max-width: 699px) {
-  /* The caption plaque runs ~80vw wide on mobile, leaving no clear column
-     beside it — shrink the sun and tuck it into the corner instead of
-     fighting the plaque for the same space. */
-  .epic__sun { width: 84px; height: 84px; top: 9%; right: 8%; }
-}
-.epic__sun::before {
-  content: ''; position: absolute; inset: -75px; border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg, rgba(255,232,158,0.55) 0deg 3deg, transparent 3deg 16deg);
-  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,0.85) 0%, transparent 68%);
-  mask-image: radial-gradient(circle, rgba(0,0,0,0.85) 0%, transparent 68%);
-  animation: epic-sun-spin 90s linear infinite;
-}
-.epic__sun::after {
-  content: ''; position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle, #fffdf5 0%, #ffe9a3 32%, #dfa93f 64%, transparent 78%);
-  box-shadow: 0 0 90px 28px rgba(223,169,63,0.35), 0 0 44px 10px rgba(255,247,220,0.55);
-}
-@keyframes epic-sun-spin { to { transform: rotate(360deg); } }
-/* Fully gone once the sea takes over the scene, not just dimmed — the
-   ocean wash (below) is the dominant light source from here on. */
-.epic__sky.phase-fall ~ .epic__sun,
-.epic__sky.phase-ocean ~ .epic__sun,
-.epic__sky.phase-rise ~ .epic__sun { opacity: 0; }
 
 /* Sits above the video and bottle (z-index 6 vs. 4/5) so once fully risen
    it visually washes over their lower edge — the sea reclaiming the scene
@@ -777,31 +748,15 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
   width: 3px; height: 3px;
 }
 
-/* No frame at all now — a feathered mask fades the video's own hard
-   rectangular edge into transparency so the warm sky behind it (the same
-   paper tone as the footage itself) shows through, reading as one
-   continuous painted scene instead of a screen sitting on top of it.
-   Landscape "wide" cut (desktop) vs portrait "tall" cut (mobile) are
-   swapped by the <source media> breakpoint in icarus-figure.js
-   (BREAKPOINT_PX) — the max-width below must stay one pixel under that
-   constant. */
-.epic__icarus {
-  position: absolute; z-index: 4; left: 50%; top: 50%;
-  width: clamp(380px, 42vw, 640px); aspect-ratio: 16 / 9;
-  transform: translate(-50%, -50%);
-  overflow: hidden;
-  background: var(--epic-cream);
-  -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 55%, transparent 100%);
-  mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 55%, transparent 100%);
-}
-@media (max-width: 699px) {
-  .epic__icarus { width: clamp(240px, 62vw, 360px); aspect-ratio: 9 / 16; }
-}
-/* Short desktop windows: the caption plaque and the video plate both want
-   vertical room around the viewport's own center, so give the plate a
-   lower resting point and shrink the plaque instead of letting them collide. */
+/* Full-bleed: the artwork now fills the entire hero section edge to edge
+   (previously a small floating plate, clamp(380px,42vw,640px), with a
+   feathered radial mask fading its edges into the sky behind it) — object-
+   fit: cover on the <video> itself (below) handles cropping whichever
+   source (wide 16:9 desktop / tall 9:16 mobile, swapped by the breakpoint
+   in icarus-figure.js) to fill the section's actual aspect ratio. */
+.epic__icarus { position: absolute; z-index: 4; inset: 0; overflow: hidden; background: var(--epic-cream); }
+/* Short desktop windows: the caption plaque wants less vertical room. */
 @media (min-width: 700px) and (max-height: 720px) {
-  .epic__icarus { top: 62%; }
   .epic__caption { top: 96px; }
   .epic__line { font-size: clamp(1.3rem, 4vw, 2.1rem); }
   .epic__sub { font-size: 0.78rem; }
@@ -831,9 +786,7 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
   position: absolute; z-index: 7; left: 50%;
   /* A fixed-feeling top edge (not a Y-centered percentage) so this never
      drifts under the sticky header on short viewports — clamp() keeps it
-     just below the header at any height instead of scaling down with it.
-     Narrower + higher than before: the video plate grew, and a 640px-wide
-     block this high up was crowding the sun's corner. */
+     just below the header at any height instead of scaling down with it. */
   top: clamp(88px, 14vh, 150px);
   transform: translateX(-50%);
   text-align: center; width: min(80vw, 520px);
@@ -902,14 +855,20 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 .epic--static .epic__icarus,
 .epic--static .epic__bottle,
 .epic--static .epic__caption,
-.epic--static .epic__actions { position: relative; left: auto; top: auto; bottom: auto; transform: none; opacity: 1; pointer-events: auto; }
+.epic--static .epic__actions { position: relative; inset: auto; transform: none; opacity: 1; pointer-events: auto; }
 .epic--static .epic__line,
 .epic--static .epic__sub { opacity: 1; }
 .epic--static .epic__ocean { transform: translateY(30%); }
 .epic--static .epic__cue,
 .epic--static .epic__particles { display: none; }
 .epic--static .epic__caption { margin: 0 auto var(--space-4); }
-.epic--static .epic__icarus { margin: 0 auto var(--space-3); }
+/* .epic__icarus dropped its own width/aspect-ratio when it went full-bleed
+   (inset: 0 fills whatever box it's in) — the static fallback still needs
+   an explicit size since here it's back in normal document flow. */
+.epic--static .epic__icarus { margin: 0 auto var(--space-3); width: clamp(380px, 42vw, 640px); aspect-ratio: 16 / 9; }
+@media (max-width: 699px) {
+  .epic--static .epic__icarus { width: clamp(240px, 62vw, 360px); aspect-ratio: 9 / 16; }
+}
 .epic--static .epic__bottle { margin: 0 auto var(--space-3); width: min(280px, 60vw); }
 .epic--static .epic__actions { justify-content: center; margin: 0 auto; }
 
