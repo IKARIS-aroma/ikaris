@@ -33,10 +33,18 @@
     // motion/no-GSAP checks below so the right video is set regardless.
     var heroVideo = root.querySelector('[data-icarus-video]');
 
+    // VP9/WebM is meaningfully smaller than the H.264/MP4 fallback on this
+    // dense cross-hatched line art (measured ~20-30% smaller at matching
+    // quality) — same codec-detection approach as the breakpoint pick
+    // above, done once since canPlayType's answer doesn't change at runtime.
+    var supportsWebm = !!(heroVideo && heroVideo.canPlayType &&
+      heroVideo.canPlayType('video/webm; codecs="vp9"').replace('no', ''));
+
     function currentBreakpointSrc() {
       var breakpoint = Number(heroVideo.getAttribute('data-breakpoint')) || 700;
       var isWide = window.matchMedia('(min-width: ' + breakpoint + 'px)').matches;
-      return heroVideo.getAttribute(isWide ? 'data-wide-src' : 'data-tall-src');
+      var attr = (isWide ? 'data-wide-src' : 'data-tall-src') + (supportsWebm ? '-webm' : '');
+      return heroVideo.getAttribute(attr);
     }
 
     function loadVideoSource() {
@@ -62,15 +70,21 @@
       }
     }
 
-    if (heroVideo && !heroVideo.currentSrc) loadVideoSource();
+    // Save-Data asks explicitly to skip non-essential heavy downloads —
+    // the hero video (5-9MB depending on variant/codec) is exactly that.
+    // Treated the same as prefers-reduced-motion: fall back to the static
+    // layout (poster image + real DOM text), never fetch the video at all.
+    var saveData = !!(navigator.connection && navigator.connection.saveData);
 
-    var reduceMotion = prefersReducedMotion;
+    var reduceMotion = prefersReducedMotion || saveData;
     var hasGSAP = !!(window.gsap && window.ScrollTrigger);
 
     if (reduceMotion || !hasGSAP) {
       root.classList.add('epic--static');
       return;
     }
+
+    if (heroVideo && !heroVideo.currentSrc) loadVideoSource();
 
     var sky = root.querySelector('[data-epic-sky]');
     var clouds = root.querySelector('[data-epic-clouds]');
@@ -98,10 +112,18 @@
     // percentages — those ran 8-10 points behind what the video was
     // already showing (e.g. the sky stayed "daytime" until 48% when the
     // video was already well into the fall by 38%).
+    //
+    // Re-derived again (Sep 2026) for the new 10-beat video (4 ascend
+    // variants + peak + 2 fall variants + impact + seabed + rise, CLIP_DUR
+    // 1.8s / XFADE 0.35s — see build-icarus-video.js) — only the ascend
+    // threshold actually moved (0.21 -> 0.30), since splitting one ascend
+    // beat into three sub-beats pushed peak's start later; peak/fall/ocean
+    // land almost exactly where they did before because the beat COUNT
+    // per phase group (1 peak, 2 fall, 2 ocean, 2 rise) didn't change.
     var PHASES = ['phase-dawn', 'phase-ascend', 'phase-peak', 'phase-fall', 'phase-ocean', 'phase-rise'];
     function phaseForProgress(p) {
       if (p < 0.08) return 'phase-dawn';
-      if (p < 0.21) return 'phase-ascend';
+      if (p < 0.30) return 'phase-ascend';
       if (p < 0.40) return 'phase-peak';
       if (p < 0.60) return 'phase-fall';
       if (p < 0.79) return 'phase-ocean';
@@ -278,14 +300,21 @@
       .to(bottleEl, { scale: 3.4, duration: 4 }, 84);
 
     // Captions, keyed to the actual baked video beat windows (see
-    // generator/build-icarus-video.js: CLIP_DUR=3.6, XFADE=0.6, 5 beats ->
-    // beat N's own window as % of total scroll is roughly ascend 0-23,
-    // peak 19-42, fall 38-62, dive 58-81, rise 77-100). The original
-    // caption timings were authored against an earlier abstract "story
-    // beat" percentage scheme and drifted 8-10 points behind what the
-    // video actually shows by the time it landed — confirmed live by
-    // scrolling the real page: at 40% the sun was still at full daytime
-    // opacity while the video already showed him falling toward the sea.
+    // generator/build-icarus-video.js). Re-derived twice now:
+    // - originally for the 5-beat set (CLIP_DUR=3.6, XFADE=0.6): ascend
+    //   0-23, peak 19-42, fall 38-62, dive 58-81, rise 77-100.
+    // - again (Sep 2026) for the 10-beat set (CLIP_DUR=1.8, XFADE=0.35,
+    //   3 ascend sub-beats + peak + 2 fall + 2 ocean + 2 rise): ascend
+    //   0-30, peak 30-40, fall 40-60, ocean 60-79, rise 79-100. Peak/fall/
+    //   ocean land almost exactly where they did before (same beat count
+    //   per phase); only the ascend/peak caption below actually needed
+    //   re-timing, since ascend absorbed the extra sub-beats.
+    // The original caption timings (before either re-derivation) were
+    // authored against an earlier abstract "story beat" percentage scheme
+    // and drifted 8-10 points behind what the video actually shows —
+    // confirmed live by scrolling the real page: at 40% the sun was still
+    // at full daytime opacity while the video already showed him falling
+    // toward the sea.
     // Looked up by data-epic-sub/-line VALUE, not array index, since the
     // two new captions below (2, 3) aren't in numeric DOM order.
     function line(idx) { return root.querySelector('[data-epic-line="' + idx + '"]'); }
@@ -296,9 +325,9 @@
     // literally drawn on top of each other in the same spot.
     if (line(0)) { gsap.set(line(0), { opacity: 1 }); tl.to(line(0), { opacity: 0, duration: 4 }, 8); }
     if (sub(0)) tl.to(sub(0), { opacity: 1, duration: 4 }, 12).to(sub(0), { opacity: 0, duration: 4 }, 20);
-    // Peak/hubris beat (video ~19-42) previously had no caption at all —
-    // the wax visibly melting was the one story beat told in total silence.
-    if (sub(2)) tl.to(sub(2), { opacity: 1, duration: 4 }, 26).to(sub(2), { opacity: 0, duration: 4 }, 34);
+    // Peak/hubris beat is now a narrower 30-40 window (was ~19-42) — shifted
+    // later and tightened from 26/34 to 32/38 so it actually sits inside it.
+    if (sub(2)) tl.to(sub(2), { opacity: 1, duration: 4 }, 32).to(sub(2), { opacity: 0, duration: 4 }, 38);
     if (sub(1)) tl.to(sub(1), { opacity: 1, duration: 4 }, 40).to(sub(1), { opacity: 0, duration: 4 }, 48);
     // Dive/discovery beat (video ~58-81) also had no caption — this is the
     // myth-to-product hinge (why is there a bottle underwater?) and was

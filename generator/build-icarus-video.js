@@ -1,11 +1,15 @@
-// Bakes the Icarus hero's scroll-scrubbed video from the 5 story-beat
-// illustrations in video-gen-source/. Each beat gets an actual directional
-// Ken Burns pan (not a centered zoom) — the start/end crop-window fractions
-// below were chosen by eye against each source image so the camera follows
-// the figure (and, in the water beats, the sea) instead of drifting into
-// blank paper. Beats are crossfaded into one continuous clip per
-// orientation, matching the two source-image variants (wide 16:9 desktop,
-// tall 9:16 mobile) already used by icarus-figure.js.
+// Bakes the Icarus hero's scroll-scrubbed video from the 10 story-beat
+// illustrations in video-gen-source/ (new artwork, Sep 2026: 4 ascend
+// variants + 1 peak + 2 fall variants + impact + seabed + rise, replacing
+// the previous 5-beat set 1:1 in narrative shape — ascend/peak/fall/ocean/
+// rise — just with richer coverage of the ascend and fall beats). Each beat
+// gets an actual directional Ken Burns pan (not a centered zoom) — the
+// start/end crop-window fractions below were chosen by eye against each
+// source image so the camera follows the figure (and, in the water beats,
+// the sea) instead of drifting into blank paper. Beats are crossfaded into
+// one continuous clip per orientation, matching the two source-image
+// variants (wide 16:9 desktop, tall 9:16 mobile) already used by
+// icarus-figure.js.
 //
 // Requires ffmpeg on PATH. Run: node generator/build-icarus-video.js
 const { execFileSync } = require('child_process');
@@ -17,8 +21,13 @@ const SRC_DIR = path.join(ROOT, 'video-gen-source');
 const OUT_DIR = path.join(ROOT, 'assets', 'icarus');
 
 const FPS = 25;
-const CLIP_DUR = 3.6; // seconds each beat is fully on-screen before the next crossfade starts
-const XFADE = 0.6; // seconds crossfaded into the next beat
+// Shortened from 3.6/0.6 (the old 5-beat set's timings) now that there are
+// twice as many beats — holding those durations would have doubled the
+// video's length and, per the brief's own encoding-risk warning, this
+// dense cross-hatched line art is already the worst case for a video
+// codec's bitrate budget.
+const CLIP_DUR = 1.8; // seconds each beat is fully on-screen before the next crossfade starts
+const XFADE = 0.35; // seconds crossfaded into the next beat
 
 // x/y are [start, end] fractions describing where the ACTION appears ON
 // SCREEN (0 = pinned to that edge of the frame, 1 = the opposite edge,
@@ -33,34 +42,63 @@ const XFADE = 0.6; // seconds crossfaded into the next beat
 // don't pre-flip these; write them as "where should this be on screen."
 const BEATS = [
   {
-    file: '01-ascend', scale: 1.3,
-    // bottom-left of frame drifting to top-right, toward the sun
-    wide: { x: [0.25, 0.75], y: [0.78, 0.12] },
-    tall: { x: [0.35, 0.65], y: [0.78, 0.12] },
+    file: '01-ascend1', scale: 1.25,
+    // rising toward the sun, centered
+    wide: { x: [0.5, 0.5], y: [0.85, 0.6] },
+    tall: { x: [0.5, 0.5], y: [0.85, 0.6] },
   },
   {
-    file: '02-peak', scale: 1.4,
-    // continues up and right into a tighter frame on his face and the melting wings
-    wide: { x: [0.35, 0.65], y: [0.55, 0.18] },
-    tall: { x: [0.35, 0.60], y: [0.55, 0.18] },
+    file: '02-ascend2', scale: 1.25,
+    wide: { x: [0.5, 0.5], y: [0.6, 0.4] },
+    tall: { x: [0.5, 0.5], y: [0.6, 0.4] },
   },
   {
-    file: '03-fall', scale: 1.3,
-    // he's upside down (feet up top, head low) with the sea below — he drifts down-frame as he falls
-    wide: { x: [0.5, 0.5], y: [0.12, 0.78] },
-    tall: { x: [0.5, 0.5], y: [0.12, 0.78] },
+    file: '03-ascend3', scale: 1.25,
+    wide: { x: [0.5, 0.5], y: [0.4, 0.22] },
+    tall: { x: [0.5, 0.5], y: [0.4, 0.22] },
   },
   {
-    file: '04-dive', scale: 1.3,
-    // underwater, diving further down and right toward the seabed/bottle
-    wide: { x: [0.35, 0.65], y: [0.22, 0.72] },
-    tall: { x: [0.35, 0.60], y: [0.22, 0.72] },
+    file: '04-peak', scale: 1.35,
+    // the hubris climax — tight on his face turned up into the sun
+    wide: { x: [0.5, 0.5], y: [0.55, 0.3] },
+    tall: { x: [0.5, 0.5], y: [0.55, 0.3] },
   },
   {
-    file: '05-rise', scale: 1.25,
-    // "forming up a bit" — a modest rise from the waterline toward the raised bottle
-    wide: { x: [0.5, 0.5], y: [0.62, 0.30] },
-    tall: { x: [0.45, 0.50], y: [0.58, 0.28] },
+    file: '05-fall1', scale: 1.2,
+    // badge-patch seam sits in the extreme top-left corner of this source —
+    // keep x/y fractions away from [0,0] all clip long so the window never
+    // reaches it, rather than trusting the patch to be invisible at 100% zoom
+    wide: { x: [0.45, 0.55], y: [0.2, 0.55] },
+    tall: { x: [0.45, 0.55], y: [0.2, 0.55] },
+  },
+  {
+    file: '06-fall2', scale: 1.25,
+    wide: { x: [0.5, 0.5], y: [0.3, 0.75] },
+    tall: { x: [0.5, 0.5], y: [0.3, 0.75] },
+  },
+  {
+    file: '07-impact', scale: 1.2,
+    // same badge-patch caution as 05-fall1
+    wide: { x: [0.5, 0.6], y: [0.35, 0.7] },
+    tall: { x: [0.5, 0.6], y: [0.35, 0.7] },
+  },
+  {
+    file: '08-seabed', scale: 1.3,
+    // reaching down-right toward the bottle on the seabed
+    wide: { x: [0.3, 0.6], y: [0.2, 0.7] },
+    tall: { x: [0.35, 0.6], y: [0.2, 0.7] },
+  },
+  {
+    file: '09-rise', scale: 1.25,
+    // rising through the water, bottle held overhead
+    wide: { x: [0.5, 0.5], y: [0.75, 0.35] },
+    tall: { x: [0.5, 0.5], y: [0.75, 0.35] },
+  },
+  {
+    file: '10-surface', scale: 1.2,
+    // breaking the surface, bottle raised to the sun — the hold before the real 3D reveal
+    wide: { x: [0.45, 0.55], y: [0.6, 0.25] },
+    tall: { x: [0.45, 0.55], y: [0.6, 0.25] },
   },
 ];
 
@@ -73,7 +111,7 @@ function even(n) {
   return Math.round(n / 2) * 2;
 }
 
-function buildVariant(variant) {
+function buildFilterComplex(variant) {
   const { w, h } = VARIANTS[variant];
   const inputs = [];
   const filters = [];
@@ -116,28 +154,48 @@ function buildVariant(variant) {
     prevLabel = outLabel;
   }
 
-  const filterComplex = filters.concat(xfadeFilters).join(';');
-  const outPath = path.join(OUT_DIR, `icarus-hero-${variant}.mp4`);
+  return { inputs, filterComplex: filters.concat(xfadeFilters).join(';'), beatCount: filters.length, xfadeCount: xfadeFilters.length };
+}
 
-  const args = [
-    '-y',
-    ...inputs,
+// Short GOP (0.6s) so the scroll-scrub's arbitrary seeks (video.currentTime
+// = scrollProgress * duration) always land near a keyframe — without this,
+// rapid successive seeks starve the decoder and playback stalls. Same
+// interval used for both codecs so mp4/webm scrub identically.
+const GOP = 15;
+
+function buildVariant(variant) {
+  const { inputs, filterComplex, beatCount, xfadeCount } = buildFilterComplex(variant);
+  console.log(`${variant}: ${beatCount} beats, ${xfadeCount} crossfades`);
+
+  // AV1/VP9 in WebM first (the brief's preferred codec for this content —
+  // meaningfully smaller than H.264 at matching quality), H.264 MP4 as the
+  // fallback for browsers/devices without WebM decode support.
+  const webmPath = path.join(OUT_DIR, `icarus-hero-${variant}.webm`);
+  execFileSync('ffmpeg', [
+    '-y', ...inputs,
     '-filter_complex', filterComplex,
     '-map', '[vout]',
     '-r', String(FPS),
-    // Short GOP so the scroll-scrub's arbitrary seeks (video.currentTime =
-    // scrollProgress * duration) always land near a keyframe — without
-    // this, rapid successive seeks starve the decoder and playback stalls.
-    '-g', '5', '-keyint_min', '5', '-bf', '0',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '19',
+    '-g', String(GOP), '-keyint_min', String(GOP),
+    '-c:v', 'libvpx-vp9', '-crf', '38', '-b:v', '0', '-deadline', 'good', '-cpu-used', '2',
+    '-pix_fmt', 'yuv420p',
+    webmPath,
+  ], { stdio: 'inherit' });
+  console.log('Wrote', webmPath);
+
+  const mp4Path = path.join(OUT_DIR, `icarus-hero-${variant}.mp4`);
+  execFileSync('ffmpeg', [
+    '-y', ...inputs,
+    '-filter_complex', filterComplex,
+    '-map', '[vout]',
+    '-r', String(FPS),
+    '-g', String(GOP), '-keyint_min', String(GOP), '-bf', '0',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '23',
     '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart',
-    outPath,
-  ];
-
-  console.log('Building', outPath, `(${filters.length} beats, ${xfadeFilters.length} crossfades)`);
-  execFileSync('ffmpeg', args, { stdio: 'inherit' });
-  console.log('Wrote', outPath);
+    mp4Path,
+  ], { stdio: 'inherit' });
+  console.log('Wrote', mp4Path);
 }
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
