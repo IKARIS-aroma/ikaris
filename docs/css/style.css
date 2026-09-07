@@ -715,33 +715,6 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 @keyframes epic-cloud-drift { from { transform: translateX(0); } to { transform: translateX(135vw); } }
 
 
-/* Sits above the video and bottle (z-index 6 vs. 4/5) so once fully risen
-   it visually washes over their lower edge — the sea reclaiming the scene
-   rather than a flat panel parked behind everything else. Taller than a
-   literal "ocean at the bottom of the screen" so that wash reaches well
-   into the video plate instead of just lapping at its bottom corner. */
-.epic__ocean { position: absolute; z-index: 6; left: 0; right: 0; bottom: 0; height: 62vh; transform: translateY(100%); filter: drop-shadow(0 -3px 14px rgba(13,49,64,0.3)); }
-.epic__ocean svg { width: 100%; height: 100%; display: block; }
-.epic__ocean path { animation: epic-wave-bob 7s ease-in-out infinite; }
-.epic__ocean path:nth-child(1) { opacity: 0.95; }
-.epic__ocean path:nth-child(2) { animation-delay: -2.3s; opacity: 0.72; }
-.epic__ocean path:nth-child(3) { animation-delay: -4.6s; opacity: 0.5; }
-.epic__ocean path:nth-child(4) { animation-delay: -1.1s; opacity: 0.3; }
-@keyframes epic-wave-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5%); } }
-
-/* Rising bubbles — a small aquatic touch inside the ocean panel itself,
-   not just wave shapes. */
-.epic__bubble {
-  position: absolute; bottom: 6%; border-radius: 50%;
-  background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.55);
-  animation: epic-bubble-rise 6s ease-in infinite;
-}
-@keyframes epic-bubble-rise {
-  0% { transform: translateY(0) scale(0.6); opacity: 0; }
-  15% { opacity: 0.85; }
-  100% { transform: translateY(-85%) scale(1.3); opacity: 0; }
-}
-
 .epic__particles { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; }
 .epic__particles span {
   position: absolute; border-radius: 50%; background: rgba(150,112,42,0.6);
@@ -858,7 +831,6 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 .epic--static .epic__actions { position: relative; inset: auto; transform: none; opacity: 1; pointer-events: auto; }
 .epic--static .epic__line,
 .epic--static .epic__sub { opacity: 1; }
-.epic--static .epic__ocean { transform: translateY(30%); }
 .epic--static .epic__cue,
 .epic--static .epic__particles { display: none; }
 .epic--static .epic__caption { margin: 0 auto var(--space-4); }

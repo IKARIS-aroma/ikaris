@@ -88,7 +88,6 @@
 
     var sky = root.querySelector('[data-epic-sky]');
     var clouds = root.querySelector('[data-epic-clouds]');
-    var ocean = root.querySelector('[data-epic-ocean]');
     var particles = root.querySelector('[data-epic-particles]');
     var figure = root.querySelector('[data-epic-figure]');
     var bottleEl = root.querySelector('[data-epic-bottle]');
@@ -263,14 +262,6 @@
     // supposed "transformation" moment, undercutting the one beat that's
     // supposed to read as a clean reveal.
     tl.to(figure, { opacity: 0, duration: 10 }, 64);
-
-    // Ocean rises into frame as Icarus falls, settles once he's in it.
-    // Start nudged from 38 to 34 to close part of the same lag the phase
-    // thresholds above were re-synced for. (gsap.set first so GSAP tracks
-    // the CSS translateY(100%) as yPercent — otherwise it assumes
-    // yPercent starts at 0 and the tween is a no-op.)
-    gsap.set(ocean, { y: 0, yPercent: 100 });
-    tl.to(ocean, { yPercent: 0, duration: 20 }, 34);
 
     // Sun-glints during the climb, sea-spray during the fall/splash/dive —
     // shifted earlier in step with the re-synced phase thresholds.
