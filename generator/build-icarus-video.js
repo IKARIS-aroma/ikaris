@@ -6,11 +6,13 @@
 // is a completely static frame, no per-beat Ken Burns pan (dropped per
 // explicit request — the pans read as unwanted "movement" against the
 // user's intent for the artwork to hold still); the beats are crossfaded
-// into one continuous clip per orientation with a long dissolve (see XFADE)
-// so scrubbing through them still feels like a continuous interactive
-// video rather than a slideshow of hard cuts. Matches the two source-image
-// variants (wide 16:9 desktop, tall 9:16 mobile) already used by
-// icarus-figure.js.
+// into one continuous clip per orientation with a long, slow dissolve
+// (see SLOW_XFADE) so scrubbing through them still feels like a continuous
+// interactive video rather than a slideshow of hard cuts — except the
+// ascend beats themselves, which stay quick (FAST_XFADE) per explicit
+// request ("the first part with the flapping wings can be fast"). Matches
+// the two source-image variants (wide 16:9 desktop, tall 9:16 mobile)
+// already used by icarus-figure.js.
 //
 // Requires ffmpeg on PATH. Run: node generator/build-icarus-video.js
 const { execFileSync } = require('child_process');
@@ -22,27 +24,27 @@ const SRC_DIR = path.join(ROOT, 'video-gen-source');
 const OUT_DIR = path.join(ROOT, 'assets', 'icarus');
 
 const FPS = 25;
-// A long crossfade relative to the hold is what makes a static-frame
-// sequence still read as one continuous "video" under scroll-scrubbing
-// instead of a slideshow — XFADE is a substantial fraction of even the
-// short beats' own duration (previously a quick 0.35s snap against a 1.8s
-// hold, back when each beat also had its own Ken Burns pan providing
-// continuous motion on its own).
-const XFADE = 1.0; // seconds crossfaded into the next beat
-const SHORT_DUR = 2.0; // ascend/peak/fall/impact/seabed — short enough that it's mostly crossfade, deliberately: reads as continuous flow rather than a hard hold
-const LONG_DUR = 7.0; // rise + surface — the emotional close before the real bottle reveal, held a lot longer per explicit request
+// Two crossfade speeds, per explicit request: the ascend beats (flapping
+// wings) stay quick, everything from the peak onward is a long, slow
+// dissolve (>=5s) so it never reads as a cut. Each beat's own `dur` has to
+// comfortably exceed the sum of its leading + trailing crossfade (fully
+// overlapped beats produce a garbled/negative-offset filter graph) — the
+// slow-crossfade beats are long enough to still hold solidly for a few
+// seconds in between.
+const FAST_XFADE = 1.0;
+const SLOW_XFADE = 5.0;
 
 const BEATS = [
-  { file: '01-ascend1', dur: SHORT_DUR },
-  { file: '02-ascend2', dur: SHORT_DUR },
-  { file: '03-ascend3', dur: SHORT_DUR },
-  { file: '04-peak', dur: SHORT_DUR },
-  { file: '05-fall1', dur: SHORT_DUR },
-  { file: '06-fall2', dur: SHORT_DUR },
-  { file: '07-impact', dur: SHORT_DUR },
-  { file: '08-seabed', dur: SHORT_DUR },
-  { file: '09-rise', dur: LONG_DUR },
-  { file: '10-surface', dur: LONG_DUR },
+  { file: '01-ascend1', dur: 2 },
+  { file: '02-ascend2', dur: 2, xfadeIn: FAST_XFADE },
+  { file: '03-ascend3', dur: 2, xfadeIn: FAST_XFADE },
+  { file: '04-peak', dur: 8, xfadeIn: FAST_XFADE }, // last fast entry; leaves it holding briefly before the slow dissolve into the fall
+  { file: '05-fall1', dur: 12, xfadeIn: SLOW_XFADE },
+  { file: '06-fall2', dur: 12, xfadeIn: SLOW_XFADE },
+  { file: '07-impact', dur: 12, xfadeIn: SLOW_XFADE },
+  { file: '08-seabed', dur: 12, xfadeIn: SLOW_XFADE },
+  { file: '09-rise', dur: 14, xfadeIn: SLOW_XFADE },
+  { file: '10-surface', dur: 16, xfadeIn: SLOW_XFADE }, // the emphasized closing beat — longest hold, no trailing crossfade
 ];
 
 const VARIANTS = {
@@ -72,17 +74,20 @@ function buildFilterComplex(variant) {
   });
 
   // Cumulative offset for the Nth crossfade = total duration of clips
-  // 1..N (their own lengths, not yet overlapped) minus N*XFADE (each
-  // completed crossfade before it has already pulled the timeline back by
-  // one XFADE) — this is what lets beats have different lengths at all;
-  // the old uniform i*(CLIP_DUR-XFADE) was just this formula's special case.
+  // 1..N (their own lengths, not yet overlapped) minus the sum of every
+  // crossfade duration used so far (each completed crossfade has already
+  // pulled the timeline back by its own length) — generalizes the earlier
+  // uniform i*(CLIP_DUR-XFADE) to per-transition crossfade lengths.
   const xfadeFilters = [];
   let prevLabel = labels[0];
   let cumulative = BEATS[0].dur;
+  let xfadeSum = 0;
   for (let i = 1; i < labels.length; i++) {
     const outLabel = i === labels.length - 1 ? 'vout' : `x${i}`;
-    const offset = (cumulative - i * XFADE).toFixed(3);
-    xfadeFilters.push(`[${prevLabel}][${labels[i]}]xfade=transition=fade:duration=${XFADE}:offset=${offset}[${outLabel}]`);
+    const xfade = BEATS[i].xfadeIn;
+    xfadeSum += xfade;
+    const offset = (cumulative - xfadeSum).toFixed(3);
+    xfadeFilters.push(`[${prevLabel}][${labels[i]}]xfade=transition=fade:duration=${xfade}:offset=${offset}[${outLabel}]`);
     prevLabel = outLabel;
     cumulative += BEATS[i].dur;
   }

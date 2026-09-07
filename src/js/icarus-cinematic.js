@@ -89,7 +89,6 @@
     var sky = root.querySelector('[data-epic-sky]');
     var clouds = root.querySelector('[data-epic-clouds]');
     var particles = root.querySelector('[data-epic-particles]');
-    var figure = root.querySelector('[data-epic-figure]');
     var bottleEl = root.querySelector('[data-epic-bottle]');
     var cue = root.querySelector('[data-epic-cue]');
     var actions = root.querySelector('[data-epic-actions]');
@@ -112,22 +111,21 @@
     // already showing (e.g. the sky stayed "daytime" until 48% when the
     // video was already well into the fall by 38%).
     //
-    // Re-derived a third time (Sep 2026) after two changes to
-    // build-icarus-video.js: per-beat Ken Burns pans were dropped (beats
-    // are now static, held together by a long 1s crossfade instead), and
-    // the last two beats (rise, surface) were stretched to 7s each versus
-    // 2s for every other beat — the emotional close before the real bottle
-    // reveal now gets deliberately lingered on. That makes the beat-group
-    // durations wildly uneven (8 short beats vs. 2 long ones), so unlike
-    // the previous re-derivation this shifted every threshold, not just
-    // one: rise+surface alone now span 40%-100% of scroll.
+    // Re-derived a fourth time (Sep 2026) after build-icarus-video.js
+    // moved to two crossfade speeds — the ascend beats (flapping wings)
+    // stay a quick 1s dissolve, but peak onward is a slow 5s dissolve, and
+    // every beat from peak on was also lengthened (8-16s) to comfortably
+    // hold across that longer crossfade. Net effect: the ascend beats,
+    // which used to span a real chunk of scroll, now cover almost none of
+    // it (0-6%) — "the rest" (peak through surface) is deliberately slow
+    // and dominates nearly the whole sequence, per explicit request.
     var PHASES = ['phase-dawn', 'phase-ascend', 'phase-peak', 'phase-fall', 'phase-ocean', 'phase-rise'];
     function phaseForProgress(p) {
-      if (p < 0.05) return 'phase-dawn';
-      if (p < 0.17) return 'phase-ascend';
-      if (p < 0.21) return 'phase-peak';
-      if (p < 0.31) return 'phase-fall';
-      if (p < 0.40) return 'phase-ocean';
+      if (p < 0.03) return 'phase-dawn';
+      if (p < 0.06) return 'phase-ascend';
+      if (p < 0.14) return 'phase-peak';
+      if (p < 0.38) return 'phase-fall';
+      if (p < 0.62) return 'phase-ocean';
       return 'phase-rise';
     }
     var currentPhase = '';
@@ -256,47 +254,44 @@
       window.addEventListener('orientationchange', maybeSwapVideoSource);
     }
 
-    // Fully gone by 70, right as the real bottle starts taking over (was
-    // 64->74) — re-timed along with everything below now that rise+surface
-    // (the last two beats) were stretched to 7s each and dominate the back
-    // half of the scroll (40-100%, see the phase thresholds above). Kept
-    // the same "finish exactly as the reveal begins" relationship as
-    // before so there's still no double-bottle overlap.
-    tl.to(figure, { opacity: 0, duration: 8 }, 62);
+    // The illustrated figure/backdrop no longer fades out at all (it used
+    // to fade to nothing right as the real bottle appeared, leaving a
+    // blank gradient behind it) — per explicit request, the final beat
+    // (surface: him breaking the water, bottle raised to the sun) is the
+    // one moment this whole sequence is building to, so it stays fully
+    // visible as the backdrop the real 3D bottle grows in front of,
+    // instead of disappearing right when it should be most prominent.
 
     // Sun-glints during the climb, sea-spray during the fall/splash/dive —
-    // re-timed to the new, much-compressed 0-40% window that now covers
-    // every beat except rise/surface.
-    tl.to(particles, { opacity: 1, duration: 4 }, 3)
-      .to(particles, { opacity: 0.3, duration: 4 }, 15)
-      .to(particles, { opacity: 1, duration: 4 }, 23)
-      .to(particles, { opacity: 0, duration: 4 }, 36);
+    // re-timed to the new, heavily front-loaded 0-62% window (ascend/peak/
+    // fall/ocean all now sit in the first 62% of scroll; rise+surface take
+    // the remaining 38%).
+    tl.to(particles, { opacity: 1, duration: 2 }, 1)
+      .to(particles, { opacity: 0.3, duration: 3 }, 10)
+      .to(particles, { opacity: 1, duration: 3 }, 20)
+      .to(particles, { opacity: 0, duration: 4 }, 50);
 
-    // Rebirth: the real bottle grows from nothing exactly as the
-    // illustrated one finishes fading (70, right after figure above), then
-    // closes the distance until it fills the screen — finishing at 90, not
-    // 100, so the fully-revealed bottle gets a genuine 10-point hold
-    // instead of appearing on the very last pixel of scroll. Three
-    // strictly back-to-back segments (70->78->84->90, not overlapping) —
-    // overlapping segments previously produced a small but real speed
-    // hitch from two tweens fighting over the same `scale` property.
-    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 8 }, 70)
-      .to(bottleEl, { scale: 1.7, duration: 6 }, 78)
-      .to(bottleEl, { scale: 3.4, duration: 6 }, 84);
+    // Rebirth: the real bottle grows from nothing well into the surface
+    // beat's own solid hold (see the phase thresholds above — rise+surface
+    // is 62-100, and surface's own crossfade-in finishes resolving well
+    // before 82), then closes the distance until it fills the screen —
+    // finishing at 98, not 100, so it isn't literally the last pixel of
+    // scroll. Three strictly back-to-back segments (82->88->94->98, not
+    // overlapping) — overlapping segments previously produced a small but
+    // real speed hitch from two tweens fighting over the same `scale`
+    // property.
+    tl.to(bottleEl, { opacity: 1, scale: 1, duration: 6 }, 82)
+      .to(bottleEl, { scale: 1.7, duration: 6 }, 88)
+      .to(bottleEl, { scale: 3.4, duration: 4 }, 94);
 
     // Captions, keyed to the actual baked video beat windows (see
-    // generator/build-icarus-video.js). Re-derived three times now:
-    // - originally for the 5-beat set (CLIP_DUR=3.6, XFADE=0.6): ascend
-    //   0-23, peak 19-42, fall 38-62, dive 58-81, rise 77-100.
-    // - for the first 10-beat set (CLIP_DUR=1.8, XFADE=0.35, uniform beat
-    //   length): ascend 0-30, peak 30-40, fall 40-60, ocean 60-79, rise
-    //   79-100.
-    // - again (Sep 2026) after dropping the per-beat Ken Burns pans and
-    //   stretching rise+surface to 7s each against 2s for every other beat
-    //   (see build-icarus-video.js): ascend 0-17, peak 17-21, fall 21-31,
-    //   ocean 31-40, rise+surface 40-100. Every threshold shifted this
-    //   time, not just one — the beat-group durations are now wildly
-    //   uneven (8 short beats vs. 2 long ones) instead of roughly even.
+    // generator/build-icarus-video.js). Re-derived four times now, most
+    // recently (Sep 2026) after build-icarus-video.js moved to two
+    // crossfade speeds (1s for the ascend beats, 5s for peak onward) and
+    // lengthened every beat from peak on (8-16s) to comfortably hold
+    // across that slower dissolve: ascend 0-6, peak 6-14, fall 14-38,
+    // ocean 38-62, rise+surface 62-100. The ascend beats collapsed to
+    // almost nothing (they're fast on purpose); every other window grew.
     // The original caption timings (before any re-derivation) were
     // authored against an earlier abstract "story beat" percentage scheme
     // and drifted 8-10 points behind what the video actually shows —
@@ -311,33 +306,29 @@
     // so the crossfades below must hand off sequentially, not overlap in
     // time — two lines partially visible at once means two lines of text
     // literally drawn on top of each other in the same spot.
-    if (line(0)) { gsap.set(line(0), { opacity: 1 }); tl.to(line(0), { opacity: 0, duration: 4 }, 5); }
-    if (sub(0)) tl.to(sub(0), { opacity: 1, duration: 4 }, 7).to(sub(0), { opacity: 0, duration: 4 }, 14);
-    // Peak/hubris beat is now only 17-21, a 4-point window — kept brief on
-    // purpose rather than stealing time from the ascend/fall captions.
-    if (sub(2)) tl.to(sub(2), { opacity: 1, duration: 2 }, 17).to(sub(2), { opacity: 0, duration: 2 }, 19);
-    if (sub(1)) tl.to(sub(1), { opacity: 1, duration: 3 }, 22).to(sub(1), { opacity: 0, duration: 3 }, 27);
-    // Dive/discovery beat (video ~31-40) — this is the myth-to-product
-    // hinge (why is there a bottle underwater?).
-    if (sub(3)) tl.to(sub(3), { opacity: 1, duration: 3 }, 32).to(sub(3), { opacity: 0, duration: 3 }, 36);
-    // Starts right as the real bottle begins fading in below (70) — the
-    // line and the reveal land together — and clears out at 84, before the
-    // bottle's biggest scale-up (84->90), so it never overlaps the
-    // bottle's neck/cap.
-    if (line(1)) tl.to(line(1), { opacity: 1, duration: 8 }, 70).to(line(1), { opacity: 0, duration: 6 }, 84);
+    if (line(0)) { gsap.set(line(0), { opacity: 1 }); tl.to(line(0), { opacity: 0, duration: 2 }, 2); }
+    if (sub(0)) tl.to(sub(0), { opacity: 1, duration: 1 }, 2).to(sub(0), { opacity: 0, duration: 1 }, 5);
+    // Peak/hubris beat is only 6-14, an 8-point window.
+    if (sub(2)) tl.to(sub(2), { opacity: 1, duration: 2 }, 7).to(sub(2), { opacity: 0, duration: 2 }, 11);
+    // Fall is now a generous 14-38 window (24 points) — the caption gets
+    // real dwell time instead of a quick flash.
+    if (sub(1)) tl.to(sub(1), { opacity: 1, duration: 3 }, 18).to(sub(1), { opacity: 0, duration: 3 }, 30);
+    // Ocean/discovery beat (38-62) — the myth-to-product hinge (why is
+    // there a bottle underwater?) — also gets a proper dwell.
+    if (sub(3)) tl.to(sub(3), { opacity: 1, duration: 3 }, 42).to(sub(3), { opacity: 0, duration: 3 }, 56);
+    // Starts with the bottle reveal (82) and clears out at 94, before the
+    // bottle's final scale-up, so it never overlaps the bottle's neck/cap.
+    if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 82).to(line(1), { opacity: 0, duration: 4 }, 94);
 
-    tl.to(actions, { opacity: 1, duration: 6 }, 90);
+    tl.to(actions, { opacity: 1, duration: 4 }, 96);
 
     // The actual root cause of "the last frame is too short" surviving
     // several previous rounds of retiming: GSAP infers a timeline's own
     // totalDuration from whichever child tween ends LAST — here, actions
-    // finishing at 90 — and scrub maps scroll progress onto THAT total,
-    // not onto a fixed literal 100. With nothing authored past 90, position
-    // 90 WAS 100% scroll progress, so the bottle's "finish at 88" was really
-    // finishing at 88/90 = 97.8% of the scroll — a hold of barely 2 points,
-    // no matter how generously the percentages above were spaced out. This
-    // empty marker anchors true position 100 as the real end, so 88-100
-    // is a genuine 12-point hold with nothing left changing in it.
+    // finishing at 100 — and scrub maps scroll progress onto THAT total,
+    // not onto a fixed literal 100. This empty marker anchors true
+    // position 100 as the real end regardless of which tween happens to
+    // finish last.
     tl.set({}, {}, 100);
   }
 
