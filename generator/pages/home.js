@@ -33,27 +33,6 @@ function build() {
       <span class="epic__cloud epic__cloud--3"></span>
     </div>
     <div class="epic__vignette" aria-hidden="true"></div>
-    <div class="epic__sun" aria-hidden="true"></div>
-
-    <div class="epic__ocean" data-epic-ocean aria-hidden="true">
-      <svg viewBox="0 0 1200 220" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="epic-wave-1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#8fd6cf"></stop>
-            <stop offset="100%" stop-color="#1c6577"></stop>
-          </linearGradient>
-        </defs>
-        <path d="M0,86 C300,26 900,146 1200,66 L1200,220 L0,220 Z" fill="url(#epic-wave-1)"></path>
-        <path d="M0,104 C300,144 900,40 1200,104 L1200,220 L0,220 Z" fill="#155a6e"></path>
-        <path d="M0,126 C300,86 900,170 1200,116 L1200,220 L0,220 Z" fill="#0d3c4d"></path>
-        <path d="M0,150 C300,190 900,110 1200,155 L1200,220 L0,220 Z" fill="#0a2733"></path>
-      </svg>
-      <span class="epic__bubble" style="left:18%;width:7px;height:7px;animation-duration:5.5s;"></span>
-      <span class="epic__bubble" style="left:34%;width:5px;height:5px;animation-duration:7s;animation-delay:-2.4s;"></span>
-      <span class="epic__bubble" style="left:52%;width:8px;height:8px;animation-duration:6.2s;animation-delay:-4.8s;"></span>
-      <span class="epic__bubble" style="left:67%;width:6px;height:6px;animation-duration:8s;animation-delay:-1.2s;"></span>
-      <span class="epic__bubble" style="left:81%;width:5px;height:5px;animation-duration:6.8s;animation-delay:-3.6s;"></span>
-    </div>
 
     <div class="epic__particles" data-epic-particles aria-hidden="true">${particles(14)}</div>
 
