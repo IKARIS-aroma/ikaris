@@ -1,12 +1,15 @@
 // Sitewide configuration: brand facts, URL structure, and the analytics
 // placeholder block described in the build brief. Edit SITE_DOMAIN once the
-// GitHub Pages repo exists (see README "Deployment").
+// hosting target exists (see README "Deployment").
 
-// The repo is named "ikaris" (a project repo, not <username>.github.io), so
-// GitHub Pages serves it at https://<username>.github.io/ikaris/ — every
-// internal link, canonical, and JSON-LD @id must carry the /ikaris prefix.
-const BASE_PATH = '/ikaris';
-const SITE_DOMAIN = 'https://ikaris-aroma.github.io';
+// Migrated off GitHub Pages (which serves project repos at a /ikaris
+// subpath, forcing every internal link, canonical, and JSON-LD @id to
+// carry that prefix) to Cloudflare, which serves at the domain root —
+// BASE_PATH is now empty. SITE_DOMAIN is the actual assigned
+// *.workers.dev domain (a Cloudflare Worker with static assets, not
+// Pages) — if you attach a custom domain later, update this to match.
+const BASE_PATH = '';
+const SITE_DOMAIN = 'https://ikaris.official-debjitm.workers.dev';
 const SITE_URL = `${SITE_DOMAIN}${BASE_PATH}`;
 
 const BRAND = {

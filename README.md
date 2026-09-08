@@ -25,7 +25,7 @@ node generator/process-assets.js   # one-off: knock out logo backgrounds, build 
 node generator/build.js            # generates the whole site into /docs
 node audit.js                      # self-audit — must report zero issues
 node generator/check-links.js      # crawls every internal href in /docs and confirms it resolves
-node generator/serve.js            # local preview server at /ikaris/ prefix, matching GitHub Pages
+node generator/serve.js            # local preview server, matching the deployed root-path serving
 ```
 
 The deployed output (`/docs`) is plain static files — no Node, npm, or build
@@ -33,28 +33,35 @@ step is needed to serve it.
 
 ---
 
-## 2. Deployment (GitHub Pages)
+## 2. Deployment (Cloudflare)
 
-The repo is a **project repo** named `ikaris` (not `<username>.github.io`), so
-GitHub Pages serves it at `https://<username>.github.io/ikaris/`. Every
-internal link, canonical URL, sitemap entry, and JSON-LD `@id` carries that
-`/ikaris` prefix — this is baked into `data/site.js` as `BASE_PATH`.
+Migrated off GitHub Pages (which serves project repos at a forced `/ikaris`
+subpath) to **Cloudflare** — currently a Worker with static assets serving
+`/docs` from `https://ikaris.official-debjitm.workers.dev`, which serves at
+the domain root, supports a `_headers` file for response caching, and gets
+automatic Brotli compression — none of which GitHub Pages offers.
+`BASE_PATH` in `data/site.js` is now `''`; every internal link, canonical
+URL, sitemap entry, and JSON-LD `@id` is root-relative to match. If the
+assigned domain or hosting product ever changes (e.g. moving to Cloudflare
+Pages proper, or attaching a custom domain), update `SITE_DOMAIN` in
+`data/site.js` to match, then `node generator/build.js` and commit the
+rebuilt `/docs`.
 
-**Before your first deploy**, open `data/site.js` and replace
-`YOUR-USERNAME` in `SITE_DOMAIN` with your actual GitHub username, then
-re-run `node generator/build.js`.
+`generator/build.js` writes `docs/_headers` on every build (immutable
+caching for `/assets/*` and `/js/*`, since those paths never change content
+at the same URL — hashless HTML still revalidates on every load). Cloudflare
+Pages reads this file automatically; Workers-with-assets deployments honor
+the same convention, but verify caching headers on a real response
+(`curl -I`) if you swap the underlying product.
 
-To publish:
-
-1. Push this repo to GitHub as `ikaris` under your account.
-2. Settings → Pages → **Deploy from a branch** → branch `main`, folder
-   **`/docs`**.
-3. Wait for the Pages build; the site will be live at
-   `https://<username>.github.io/ikaris/`.
-
-If you ever rename the repo to `<username>.github.io` instead (serving at
-the domain root), change `BASE_PATH` in `data/site.js` to `''` and rebuild —
-every link in the site updates automatically.
+**If you still have GitHub Pages enabled for this repo**: it will keep
+serving whatever was last committed, but every internal link is now
+root-relative (e.g. `/men/`), which resolves incorrectly under GitHub
+Pages' `/ikaris/` subpath — effectively broken for that host the moment
+this change merges. Disable GitHub Pages (Settings → Pages → source: None)
+once Cloudflare is confirmed live, or revert `BASE_PATH` to `'/ikaris'` and
+`SITE_DOMAIN` to the `github.io` value if you need to keep both hosts
+working simultaneously.
 
 ---
 

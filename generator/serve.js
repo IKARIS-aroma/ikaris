@@ -1,7 +1,8 @@
-// Tiny static server that mimics GitHub Pages project-repo serving: the
-// site's own generated links carry a /ikaris prefix (BASE_PATH), so this
-// server strips that prefix and serves from /docs, same as GH Pages would.
-// Supports HTTP Range requests (206 Partial Content) — required for the
+// Tiny static server that mimics the real hosting target: the site's own
+// generated links carry whatever prefix BASE_PATH is set to (empty for
+// Cloudflare Pages' root-domain serving; previously /ikaris for GitHub
+// Pages' project-repo serving), so this server strips that same prefix
+// and serves from /docs. Supports HTTP Range requests (206 Partial Content) — required for the
 // browser to seek within the scroll-scrubbed hero video; GitHub Pages'
 // actual hosting supports this natively, but this dev server didn't, which
 // silently broke local testing of video seeking (confirmed: without Range
