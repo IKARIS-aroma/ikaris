@@ -779,29 +779,47 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
      into the same grid cell makes the container's height track just the
      tallest single line instead of the sum of all four. */
   display: grid;
+  /* Was relying on a light text-shadow glow to stay legible over whatever
+     the artwork behind it happened to show — fine back when this sat on a
+     small floating video plate against a fairly consistent light sky, but
+     the hero went full-bleed and now swings from bright cream sky to dark
+     underwater within the same scroll, and dark ink text with a light
+     glow is nearly invisible against the dark beats (confirmed: "the sea
+     kept what the sky refused" was unreadable against the underwater
+     frame it appears over). A dedicated scrim plaque guarantees contrast
+     regardless of what's playing underneath — verified against both the
+     brightest and darkest frames in the sequence, light text on this
+     scrim clears WCAG AA (4.5:1) in both cases, with real margin to
+     spare on the dark end.
+     */
+  padding: 1.1em 1.4em;
+  background: rgba(20, 16, 12, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius);
 }
 .epic__caption > * { grid-area: 1 / 1; margin: 0; align-self: center; }
 .epic__line {
   font-family: var(--font-serif); font-weight: 500;
   font-size: clamp(1.8rem, 5.4vw, 3.6rem);
   line-height: 1.1;
-  color: var(--epic-ink);
-  text-shadow: 0 1px 3px rgba(255,252,240,0.7), 0 0 24px rgba(255,252,240,0.6);
+  color: var(--bone);
   opacity: 0;
 }
 .epic__sub {
   font-family: var(--font-sans); font-size: clamp(0.85rem, 1.5vw, 1.05rem);
-  color: var(--epic-ink-soft);
+  color: rgba(243, 239, 231, 0.85);
   letter-spacing: 0.03em;
-  text-shadow: 0 1px 3px rgba(255,252,240,0.7), 0 0 20px rgba(255,252,240,0.6);
   opacity: 0;
 }
 /* One word/phrase per caption carries the emotional weight of that line
-   ("the sun", "to weep", "the sea", "kept") — picking it out in the
-   brand's gold, rather than leaving every word the same weight, is what
-   makes the line read as authored/art-directed rather than a plain
-   caption. */
-.epic__accent { color: var(--gold); font-style: italic; }
+   ("the sun", "to weep", "the sea", "kept") — picking it out in gold,
+   rather than leaving every word the same weight, is what makes the line
+   read as authored/art-directed rather than a plain caption. A lighter
+   gold than the sitewide --gold/--gold-soft tokens on purpose — those were
+   darkened for contrast against the site's light --paper background, which
+   would make them nearly invisible against this caption's dark scrim. */
+.epic__accent { color: #e8c17a; font-style: italic; }
 
 .epic__actions {
   position: absolute; z-index: 7; left: 50%; bottom: 8vh; transform: translateX(-50%);
