@@ -4,4 +4,4 @@ Disallow: /order-confirmed/
 Disallow: /404.html
 Disallow: /analytics-debug/
 
-Sitemap: https://ikaris.official-debjitm.workers.dev/sitemap.xml
+Sitemap: https://ikaris.pages.dev/sitemap.xml

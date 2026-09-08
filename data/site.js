@@ -4,12 +4,13 @@
 
 // Migrated off GitHub Pages (which serves project repos at a /ikaris
 // subpath, forcing every internal link, canonical, and JSON-LD @id to
-// carry that prefix) to Cloudflare, which serves at the domain root —
-// BASE_PATH is now empty. SITE_DOMAIN is the actual assigned
-// *.workers.dev domain (a Cloudflare Worker with static assets, not
-// Pages) — if you attach a custom domain later, update this to match.
+// carry that prefix) to Cloudflare Pages, which serves at the domain
+// root — BASE_PATH is now empty. SITE_DOMAIN is the actual assigned
+// *.pages.dev domain (an earlier Cloudflare Workers attempt used
+// ikaris.official-debjitm.workers.dev, since replaced by this Pages
+// project) — if you attach a custom domain later, update this to match.
 const BASE_PATH = '';
-const SITE_DOMAIN = 'https://ikaris.official-debjitm.workers.dev';
+const SITE_DOMAIN = 'https://ikaris.pages.dev';
 const SITE_URL = `${SITE_DOMAIN}${BASE_PATH}`;
 
 const BRAND = {
