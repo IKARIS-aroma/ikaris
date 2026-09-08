@@ -26,7 +26,7 @@ const BRAND = {
 // how to fill these in and what USE_DIRECT_GA4 controls.
 const ANALYTICS = {
   GTM_CONTAINER_ID: 'GTM-XXXXXXX',
-  GA4_MEASUREMENT_ID: 'G-XXXXXXXXXX',
+  GA4_MEASUREMENT_ID: 'G-LK98FXSEMF',
   USE_DIRECT_GA4: true,
   CLARITY_PROJECT_ID: '',
   META_PIXEL_ID: '',
