@@ -51,7 +51,7 @@ const FOOTER_LINKS = [
 ];
 
 const CONTACT = {
-  email: 'hello@ikaris.example',
+  email: 'official.debjitm@gmail.com',
   city: 'Kolkata, India',
 };
 
