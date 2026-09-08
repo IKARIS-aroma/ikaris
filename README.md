@@ -33,33 +33,26 @@ step is needed to serve it.
 
 ---
 
-## 2. Deployment (Cloudflare Pages)
+## 2. Deployment (Cloudflare)
 
 Migrated off GitHub Pages (which serves project repos at a forced `/ikaris`
-subpath) to **Cloudflare Pages**, which serves at the domain root, supports
-a `_headers` file for response caching, and gets automatic Brotli
-compression — none of which GitHub Pages offers. `BASE_PATH` in
-`data/site.js` is now `''`; every internal link, canonical URL, sitemap
-entry, and JSON-LD `@id` is root-relative.
-
-To publish:
-
-1. In the Cloudflare dashboard: **Workers & Pages → Create → Pages →
-   Connect to Git**, pick this repo.
-2. Build settings: **Framework preset: None**, **Build command:** leave
-   blank (the site is pre-built into `/docs` and committed — see §1),
-   **Build output directory: `docs`**.
-3. Deploy. Cloudflare assigns a `<project-name>.pages.dev` domain — open
-   `data/site.js` and set `SITE_DOMAIN` to match exactly (it's a
-   placeholder, `https://ikaris.pages.dev`, until you confirm the real
-   one), then `node generator/build.js` and commit the rebuilt `/docs`.
-4. Optional: attach a custom domain under the Pages project's **Custom
-   domains** tab — update `SITE_DOMAIN` the same way if you do.
+subpath) to **Cloudflare** — currently a Worker with static assets serving
+`/docs` from `https://ikaris.official-debjitm.workers.dev`, which serves at
+the domain root, supports a `_headers` file for response caching, and gets
+automatic Brotli compression — none of which GitHub Pages offers.
+`BASE_PATH` in `data/site.js` is now `''`; every internal link, canonical
+URL, sitemap entry, and JSON-LD `@id` is root-relative to match. If the
+assigned domain or hosting product ever changes (e.g. moving to Cloudflare
+Pages proper, or attaching a custom domain), update `SITE_DOMAIN` in
+`data/site.js` to match, then `node generator/build.js` and commit the
+rebuilt `/docs`.
 
 `generator/build.js` writes `docs/_headers` on every build (immutable
 caching for `/assets/*` and `/js/*`, since those paths never change content
 at the same URL — hashless HTML still revalidates on every load). Cloudflare
-reads this automatically; no dashboard configuration needed for it.
+Pages reads this file automatically; Workers-with-assets deployments honor
+the same convention, but verify caching headers on a real response
+(`curl -I`) if you swap the underlying product.
 
 **If you still have GitHub Pages enabled for this repo**: it will keep
 serving whatever was last committed, but every internal link is now
