@@ -151,6 +151,21 @@ Sitemap: ${SITE_URL}/sitemap.xml
   fs.writeFileSync(path.join(OUT, 'robots.txt'), robots, 'utf8');
   fs.writeFileSync(path.join(OUT, '.nojekyll'), '', 'utf8');
 
+  // Cloudflare Pages reads this to set response headers — GitHub Pages has
+  // no equivalent and ignores the file harmlessly if that's still in play
+  // during a transition. Hashless filenames mean HTML must revalidate on
+  // every load, but the fingerprint-free asset paths (icarus hero video,
+  // models, product renders) never change content at the same URL, so they
+  // can be cached forever.
+  const headers = `/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+`;
+  fs.writeFileSync(path.join(OUT, '_headers'), headers, 'utf8');
+
   console.log(`Done. ${built.length + 1} pages, ${indexable.length} indexable in sitemap.`);
 }
 
