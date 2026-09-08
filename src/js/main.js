@@ -14,6 +14,7 @@
   }
 
   var BASE = document.body.dataset.basePath || '';
+  var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // cart.js falls back to an in-memory array when localStorage throws
   // (Safari private browsing, storage blocked in settings, quota full) —
@@ -358,7 +359,7 @@
         window.track('add_shipping_info', { currency: 'INR', value: value, items: items, shipping_tier: 'Standard' });
         if (paymentSection) {
           paymentSection.hidden = false;
-          paymentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          paymentSection.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
         }
       });
     }

@@ -12,12 +12,19 @@
   --paper-2: #e3e1dc;
   --paper-3: #d2cfc8;
   --charcoal: #1e1d1b;
-  --gold: #96702a;
-  --gold-soft: #b9903f;
-  --muted: #6d6a64;
+  /* Darkened from the original #96702a/#b9903f/#6d6a64/#4f7a5c — those
+     read as a warm, elegant palette in isolation but failed real contrast
+     checks against --paper/--paper-2 as actual body/link text (gold-soft
+     was 2.59:1 against --paper, WCAG AA needs 4.5:1 for normal-size text)
+     — confirmed by a direct readability complaint. Same hues, same
+     "brass/gold accent, muted secondary text" roles, just dark enough to
+     read. */
+  --gold: #63430f;
+  --gold-soft: #7f5a1c;
+  --muted: #54504a;
   --line: rgba(30, 29, 27, 0.15);
   --danger: #a8483a;
-  --success: #4f7a5c;
+  --success: #3d6349;
 
   --ink: #0b0b0d;
   --ink-2: #141418;

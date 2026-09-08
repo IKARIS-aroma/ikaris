@@ -89,7 +89,13 @@ function initViewer(container, opts) {
   const hideSiblingPhoto = opts.hideSiblingPhoto !== false;
   const showHint = opts.showHint !== false;
   const enableControls = opts.enableControls !== false;
-  const autoRotate = opts.autoRotate !== false;
+  // Drag-to-rotate stays available under reduced motion (it's a user-
+  // initiated action, not automatic movement) — only the self-driven
+  // auto-rotate is gated. The viewer previously had no reduced-motion
+  // awareness at all, so a visitor with the OS setting on still got a
+  // bottle spinning on its own with zero way to stop it short of dragging.
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const autoRotate = opts.autoRotate !== false && !prefersReducedMotion;
   const photoStage = hideSiblingPhoto ? container.parentElement.querySelector('[data-tilt-stage]') : null;
   // The hero bottle nests its static photo directly inside the same
   // container as the canvas (not a [data-tilt-stage] sibling like product
