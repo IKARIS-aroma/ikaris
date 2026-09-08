@@ -739,6 +739,7 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 @media (min-width: 700px) and (max-height: 720px) {
   .epic__caption { top: 96px; }
   .epic__line { font-size: clamp(1.3rem, 4vw, 2.1rem); }
+  .epic__caption-sub { bottom: 6vh; }
   .epic__sub { font-size: 0.78rem; }
 }
 .epic__icarus video {
@@ -769,15 +770,17 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
      just below the header at any height instead of scaling down with it. */
   top: clamp(88px, 14vh, 150px);
   transform: translateX(-50%);
-  text-align: center; width: min(80vw, 520px);
+  /* Only the two headlines live here now (the narrative sub-lines moved to
+     their own bottom-left plaque, .epic__caption-sub, below) — sized to
+     hug whichever headline is showing instead of reserving room for the
+     old wider two-line block. */
+  text-align: center; width: fit-content; max-width: min(90vw, 560px);
   pointer-events: none;
-  /* All four lines (2 headlines + 2 subs) crossfade via opacity but only
-     one is ever visible — without this they still stack in normal flow
-     and their heights ADD UP (worst on mobile, where the narrower column
-     wraps each one across more lines), pushing the whole block much
-     taller than the single line actually on screen. Stacking every child
-     into the same grid cell makes the container's height track just the
-     tallest single line instead of the sum of all four. */
+  /* Both headlines crossfade via opacity but only one is ever visible —
+     without this they still stack in normal flow and their heights ADD UP,
+     pushing the block taller than the single line actually on screen.
+     Stacking both into the same grid cell makes the container's height
+     track just the one line instead of the sum of both. */
   display: grid;
   /* Was relying on a light text-shadow glow to stay legible over whatever
      the artwork behind it happened to show — fine back when this sat on a
@@ -821,6 +824,24 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
    would make them nearly invisible against this caption's dark scrim. */
 .epic__accent { color: #e8c17a; font-style: italic; }
 
+/* The four narrative sub-lines, pulled out of .epic__caption into their own
+   small plaque anchored bottom-left — left-aligned, well clear of the
+   centered .epic__cue/.epic__actions below the fold, and sized to just the
+   text rather than a wide centered block. */
+.epic__caption-sub {
+  position: absolute; z-index: 7; left: var(--space-4);
+  bottom: 8vh;
+  text-align: left; width: fit-content; max-width: min(60vw, 340px);
+  pointer-events: none;
+  display: grid;
+  padding: 0.75em 1.05em;
+  background: rgba(20, 16, 12, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius);
+}
+.epic__caption-sub > * { grid-area: 1 / 1; margin: 0; align-self: center; }
+
 .epic__actions {
   position: absolute; z-index: 7; left: 50%; bottom: 8vh; transform: translateX(-50%);
   display: flex; gap: var(--space-2);
@@ -853,12 +874,14 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 .epic--static .epic__icarus,
 .epic--static .epic__bottle,
 .epic--static .epic__caption,
-.epic--static .epic__actions { position: relative; inset: auto; transform: none; opacity: 1; pointer-events: auto; }
+.epic--static .epic__caption-sub,
+.epic--static .epic__actions { position: relative; inset: auto; left: auto; transform: none; opacity: 1; pointer-events: auto; }
 .epic--static .epic__line,
 .epic--static .epic__sub { opacity: 1; }
 .epic--static .epic__cue,
 .epic--static .epic__particles { display: none; }
 .epic--static .epic__caption { margin: 0 auto var(--space-4); }
+.epic--static .epic__caption-sub { margin: 0 auto var(--space-4); text-align: center; }
 /* .epic__icarus dropped its own width/aspect-ratio when it went full-bleed
    (inset: 0 fills whatever box it's in) — the static fallback still needs
    an explicit size since here it's back in normal document flow. */
