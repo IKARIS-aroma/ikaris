@@ -761,8 +761,7 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 /* Parked in the open sky above the video plate, clear of both the sun and
    the illustration/footage underneath it (top: 22vh, not a Y-centered
    46%) — plain text directly on the sky now that it has a clean patch of
-   paper to sit on, with a soft light halo standing in for a boxed
-   background so it still reads if a brighter patch of sky drifts behind it. */
+   paper to sit on. */
 .epic__caption {
   position: absolute; z-index: 7; left: 50%;
   /* A fixed-feeling top edge (not a Y-centered percentage) so this never
@@ -782,24 +781,6 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
      Stacking both into the same grid cell makes the container's height
      track just the one line instead of the sum of both. */
   display: grid;
-  /* Was relying on a light text-shadow glow to stay legible over whatever
-     the artwork behind it happened to show — fine back when this sat on a
-     small floating video plate against a fairly consistent light sky, but
-     the hero went full-bleed and now swings from bright cream sky to dark
-     underwater within the same scroll, and dark ink text with a light
-     glow is nearly invisible against the dark beats (confirmed: "the sea
-     kept what the sky refused" was unreadable against the underwater
-     frame it appears over). A dedicated scrim plaque guarantees contrast
-     regardless of what's playing underneath — verified against both the
-     brightest and darkest frames in the sequence, light text on this
-     scrim clears WCAG AA (4.5:1) in both cases, with real margin to
-     spare on the dark end.
-     */
-  padding: 1.1em 1.4em;
-  background: rgba(20, 16, 12, 0.72);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  border-radius: var(--radius);
 }
 .epic__caption > * { grid-area: 1 / 1; margin: 0; align-self: center; }
 .epic__line {
@@ -808,6 +789,11 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
   line-height: 1.1;
   color: var(--bone);
   opacity: 0;
+  /* No background plaque behind the headline (removed on request) — both
+     of its appearances sit over the video's brighter beats (the opening
+     sky, the closing surface reveal), so a dark, fairly tight shadow does
+     the legibility work a scrim previously did, without boxing the text. */
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.85);
 }
 .epic__sub {
   font-family: var(--font-sans); font-size: clamp(0.85rem, 1.5vw, 1.05rem);
