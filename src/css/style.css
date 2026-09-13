@@ -177,6 +177,15 @@ textarea:focus-visible, [tabindex]:focus-visible {
   min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
   position: relative;
 }
+/* Sitewide background-music toggle, shown/hidden identically to the hero's
+   own sound toggle (see .epic__sound-toggle) — same icons, same on/off
+   swap via aria-pressed, just living in the header instead of the hero
+   since this one needs to be reachable from every page, not only the
+   homepage. src/js/experience.js keeps it paused whenever the Icarus
+   story section is on screen, so the two soundscapes never layer. */
+.ambient-music-icon--on { display: none; }
+.ambient-music-toggle[aria-pressed="true"] .ambient-music-icon--off { display: none; }
+.ambient-music-toggle[aria-pressed="true"] .ambient-music-icon--on { display: inline-flex; }
 .cart-badge {
   position: absolute; top: 2px; right: 2px;
   background: var(--gold); color: var(--paper);

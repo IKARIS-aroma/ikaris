@@ -8,6 +8,10 @@ const ICON_MENU =
   '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const ICON_CLOSE =
   '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICON_SOUND_OFF =
+  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>';
+const ICON_SOUND_ON =
+  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12"/></svg>';
 
 function renderConsentDefaultScript() {
   return `<script>
@@ -122,6 +126,10 @@ function renderHeader(canonicalPath = '') {
     </a>
     <nav class="main-nav" aria-label="Primary"><ul>${navItems}</ul></nav>
     <div class="header-actions">
+      <button type="button" class="icon-btn ambient-music-toggle" data-ambient-music-toggle aria-pressed="false" aria-label="Play background music" data-music-src="${assetUrl('audio/ambient-jazz.mp3')}">
+        <span class="ambient-music-icon ambient-music-icon--off">${ICON_SOUND_OFF}</span>
+        <span class="ambient-music-icon ambient-music-icon--on">${ICON_SOUND_ON}</span>
+      </button>
       <a href="${url('/cart/')}" class="icon-btn" aria-label="Cart" data-testid="cart-link">
         ${ICON_CART}<span class="cart-badge" hidden data-testid="cart-count">0</span>
       </a>

@@ -134,11 +134,72 @@
     els.forEach(function (el) { obs.observe(el); });
   }
 
+  // ---------- Sitewide background music ----------
+  // Opt-in ambient music for everywhere on the site EXCEPT the Icarus
+  // hero — that section has its own distinct sound (see icarus-
+  // cinematic.js's startVideoOnce/sound-toggle logic), and layering a
+  // second soundscape on top of it would undercut exactly the "its own
+  // distinct experience" the hero was built for. This toggle lives in
+  // the header (loaded on every page, unlike the hero which only exists
+  // on the homepage), off by default, and only ever starts inside its
+  // own click handler — a real user gesture, satisfying every browser's
+  // autoplay policy on its own.
+  //
+  // Static multi-page site, not an SPA: there is no way for this to
+  // literally keep playing gaplessly across a full page navigation (that
+  // tears down all JS state, this Audio object included) — it restarts
+  // fresh each time a new page loads, rather than following the visitor
+  // continuously from page to page. Accepted trade-off of this
+  // architecture, not something worth an SPA rewrite to fix.
+  function initAmbientMusic() {
+    var toggle = document.querySelector('[data-ambient-music-toggle]');
+    if (!toggle) return;
+    var music = null;
+    var enabled = false;
+    // Only the homepage has an Icarus hero; on every other page this
+    // just stays false forever, so the music plays as soon as enabled.
+    var insideHero = false;
+
+    var heroEl = document.querySelector('[data-epic]');
+    if (heroEl && window.IntersectionObserver) {
+      // threshold 0 — any part of the hero on screen at all counts as
+      // "inside the story", whether GSAP has it pinned/fixed or (in
+      // .epic--static/reduced-motion mode) sitting in normal flow.
+      var io = new IntersectionObserver(function (entries) {
+        insideHero = entries[0].isIntersecting;
+        sync();
+      }, { threshold: 0 });
+      io.observe(heroEl);
+    }
+
+    function sync() {
+      if (!music) return;
+      if (enabled && !insideHero) {
+        if (music.paused) music.play().catch(function () {});
+      } else if (!music.paused) {
+        music.pause();
+      }
+    }
+
+    toggle.addEventListener('click', function () {
+      if (!music) {
+        music = new Audio(toggle.getAttribute('data-music-src'));
+        music.loop = true;
+        music.volume = 0.45;
+      }
+      enabled = !enabled;
+      toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      toggle.setAttribute('aria-label', enabled ? 'Mute background music' : 'Play background music');
+      sync();
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initPreloader();
     initCursor();
     initTiltStages();
     initMagnetic();
     initReveal();
+    initAmbientMusic();
   });
 })();
