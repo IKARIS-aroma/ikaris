@@ -346,12 +346,39 @@ textarea:focus-visible, [tabindex]:focus-visible {
 .cart-table { width: 100%; border-collapse: collapse; }
 .cart-table th, .cart-table td { text-align: left; padding: var(--space-2) 0.5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .cart-table th { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.cart-line__product { display: flex; align-items: center; gap: var(--space-2); }
-.cart-line__product img { width: 56px; height: 76px; object-fit: cover; border-radius: var(--radius); }
+.cart-line__product { display: flex; align-items: flex-start; gap: var(--space-2); }
+.cart-line__product img { width: 56px; height: 76px; object-fit: cover; border-radius: var(--radius); flex: none; }
 .cart-summary { background: var(--paper-2); border: 1px solid var(--line); padding: var(--space-3); }
-.cart-summary__row { display: flex; justify-content: space-between; padding: 0.4em 0; }
+.cart-summary__row { display: flex; justify-content: space-between; gap: var(--space-2); padding: 0.4em 0; }
 .cart-summary__row--total { border-top: 1px solid var(--line); margin-top: 0.5em; padding-top: 0.75em; font-weight: 600; font-size: 1.1rem; }
 .cart-empty { text-align: center; padding: var(--space-5) 0; color: var(--muted); }
+
+/* Below ~640px the 5-column cart table (thumbnail+name, price, a two-button
+   qty stepper, subtotal, remove) no longer fits a phone screen — laid out
+   as a real table it forces the row to ~575px wide, so with two or more
+   lines the Qty/Subtotal/Remove columns sit off the right edge and only
+   scrolling the table sideways (independent of the page's own scroll)
+   reaches the Remove button at all. Restructure each row into a stacked
+   card instead of relying on horizontal scroll: the product cell keeps its
+   own line, and price/qty/subtotal/remove become label+value strips underneath. */
+@media (max-width: 640px) {
+  .cart-table thead { display: none; }
+  .cart-table, .cart-table tbody, .cart-table tr, .cart-table td {
+    display: block;
+    width: 100%;
+  }
+  .cart-table td { border-bottom: none; padding: 0.3em 0; }
+  .cart-table tr { padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+  .cart-line__price, .cart-line__qty, .cart-line__total {
+    display: flex; align-items: center; justify-content: space-between; min-height: 2rem;
+  }
+  .cart-line__price::before, .cart-line__qty::before, .cart-line__total::before {
+    content: attr(data-label); color: var(--muted); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .cart-line__total { font-weight: 600; }
+  .cart-line__remove { text-align: right; }
+  .cart-line__remove .btn { width: 100%; }
+}
 
 .form-grid { display: grid; gap: var(--space-2); }
 @media (min-width: 700px) { .form-grid.cols-2 { grid-template-columns: 1fr 1fr; } }

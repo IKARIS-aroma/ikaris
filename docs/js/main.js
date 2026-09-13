@@ -247,12 +247,12 @@
         tr.innerHTML =
           '<td class="cart-line__product"><img src="' + BASE + '/assets/thumbs/' + line.slug + '.jpg" width="56" height="76" alt="" loading="lazy">' +
           '<div><strong>' + line.name + '</strong><br><span style="color:var(--muted);font-size:0.8rem;">' + line.variant + '</span></div></td>' +
-          '<td>₹' + line.price.toLocaleString('en-IN') + '</td>' +
-          '<td><span class="qty-input"><button type="button" data-cart-dec="' + line.slug + '" aria-label="Decrease quantity">−</button>' +
+          '<td class="cart-line__price" data-label="Price">₹' + line.price.toLocaleString('en-IN') + '</td>' +
+          '<td class="cart-line__qty" data-label="Qty"><span class="qty-input"><button type="button" data-cart-dec="' + line.slug + '" aria-label="Decrease quantity">−</button>' +
           '<input type="text" inputmode="numeric" value="' + line.qty + '" readonly aria-label="Quantity for ' + line.name + '">' +
           '<button type="button" data-cart-inc="' + line.slug + '" aria-label="Increase quantity">+</button></span></td>' +
-          '<td>₹' + (line.price * line.qty).toLocaleString('en-IN') + '</td>' +
-          '<td><button type="button" class="btn btn-ghost" data-cart-remove="' + line.slug + '" data-testid="cart-remove">Remove</button></td>';
+          '<td class="cart-line__total" data-label="Subtotal">₹' + (line.price * line.qty).toLocaleString('en-IN') + '</td>' +
+          '<td class="cart-line__remove"><button type="button" class="btn btn-ghost" data-cart-remove="' + line.slug + '" data-testid="cart-remove">Remove</button></td>';
         tableBody.appendChild(tr);
       });
 
