@@ -33,11 +33,24 @@
     // motion/no-GSAP checks below so the right video is set regardless.
     var heroVideo = root.querySelector('[data-icarus-video]');
 
+    // A reliable enough phone/tablet signal (see the same check in
+    // bottle-viewer.js) — used below to steer mobile off VP9/WebM.
+    var isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
     // VP9/WebM is meaningfully smaller than the H.264/MP4 fallback on this
     // dense cross-hatched line art (measured ~20-30% smaller at matching
-    // quality) — same codec-detection approach as the breakpoint pick
-    // above, done once since canPlayType's answer doesn't change at runtime.
-    var supportsWebm = !!(heroVideo && heroVideo.canPlayType &&
+    // quality), but this video is never actually played — it's scrubbed via
+    // repeated video.currentTime seeks on a paused element, which forces a
+    // fresh decode from the nearest keyframe on every single seek. Desktop
+    // Chrome/Firefox decode VP9 in hardware, so that cost is trivial there;
+    // most Android phones report VP9 as "supported" via canPlayType while
+    // actually decoding it in software (no HW VP9 block on the SoC), which
+    // turns 20-30 scrub-seeks a second into real, visible jank — exactly
+    // the "mobile version lagging" reports. H.264 hardware decode is close
+    // to universal on phones, so mobile skips the smaller WebM file and
+    // takes the MP4 fallback instead, trading a bit of download size for a
+    // much cheaper decode where it actually matters.
+    var supportsWebm = !isCoarsePointer && !!(heroVideo && heroVideo.canPlayType &&
       heroVideo.canPlayType('video/webm; codecs="vp9"').replace('no', ''));
 
     function currentBreakpointSrc() {
@@ -156,12 +169,15 @@
     // gating writes to one per rendered frame isn't enough margin on that
     // hardware; community fixes for this exact pattern throttle to
     // roughly half the frame rate. onUpdate just records the latest
-    // progress (cheap); this loop applies it at ~30/sec, comfortably
-    // smooth for slow Ken-Burns-style motion while giving iOS's decoder
-    // real breathing room between seeks.
+    // progress (cheap); this loop applies it at ~30/sec on desktop,
+    // comfortably smooth for slow Ken-Burns-style motion while giving
+    // iOS's decoder real breathing room between seeks. Every beat is a
+    // static held frame with slow crossfades (no pans left), so dropping to
+    // ~20/sec buys back real decode headroom on phones generally (not just
+    // iOS) without the slower cadence ever being visible.
     var pendingProgress = null;
     var lastSeekAt = 0;
-    var MIN_SEEK_INTERVAL_MS = 33;
+    var MIN_SEEK_INTERVAL_MS = isCoarsePointer ? 50 : 33;
     function videoSeekLoop(now) {
       requestAnimationFrame(videoSeekLoop);
       if (pendingProgress === null || !video || !video.duration) return;
