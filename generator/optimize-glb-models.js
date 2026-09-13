@@ -45,15 +45,20 @@ function optimize(file) {
   run(['png', step1, step2, '--slots', 'normalTexture', '--effort', '100']);
 
   // The label (baseColorTexture) is deliberately left byte-for-byte as
-  // Blender exported it — not resized, not re-encoded as WebP, not even
-  // re-run through a PNG optimizer. It went through two rounds of "safe"
-  // reprocessing (WebP, then a re-compressed PNG) and both shipped a
-  // blank label on real devices (confirmed on Safari) despite rendering
-  // correctly in every local Chromium test — so gltf-transform's own
-  // re-encoding is itself suspect here, not just the WebP format choice.
-  // The normal-map resize above is untouched by this and unrelated to the
-  // label bug (normal maps only affect bump/lighting, not baseColorTexture),
-  // so it still carries the large majority of the size win on its own.
+  // Blender exported it. The actual blank-label bugs (root-caused after
+  // this texture wrongly took the blame through three rounds of format
+  // changes) were: (1) the site's CSP was missing `blob:` in connect-src,
+  // which every embedded glTF texture loads through — fixed in
+  // generator/build.js; (2) this specific texture is 2048x1440, non-
+  // power-of-two, with a sampler requesting REPEAT wrapping + a mipmap
+  // filter, which is invalid for NPOT textures under the WebGL spec and
+  // rendered blank specifically on Safari — fixed at runtime in
+  // bottle-viewer.js (forces NPOT-safe sampler settings on any texture
+  // that needs it). Both fixes are format-agnostic, so re-touching this
+  // texture again is probably safe now — left alone anyway because the
+  // normal-map resize alone already carries the large majority of the
+  // size win (~64%), and there's no need to reopen a texture that's
+  // already caused this much trouble for a comparatively small extra cut.
 
   const before = fs.statSync(srcPath).size;
   const after = fs.statSync(step2).size;
