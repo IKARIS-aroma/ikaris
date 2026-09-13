@@ -26,8 +26,21 @@ function renderIcarusFigure() {
   // should have matched the wide query). JS-driven src selection (see
   // icarus-cinematic.js) is the standard, reliable workaround — so the
   // codec choice is made in JS too (canPlayType), not via <source type>.
+  // preload="metadata", not "auto" — this clip is 12-24MB depending on
+  // variant/codec (measured, not the low estimate an earlier comment in
+  // icarus-cinematic.js gave). Note this attribute alone does NOT stop
+  // the eager full-file download on its own: confirmed by inspecting
+  // actual network traffic that the moment .play() is called (see the
+  // iOS decoder-warmup comment in icarus-cinematic.js), Chrome issues an
+  // open-ended `Range: bytes=0-` request and pulls the entire file
+  // regardless of this attribute — preload only governs buffering
+  // *before* playback intent is signaled. The real fix is deferring the
+  // whole load (and that .play() call) to the visitor's first scroll
+  // input, done in icarus-cinematic.js's startVideoOnce(); this attribute
+  // is what makes that deferral actually mean something (no eager
+  // metadata probe either) rather than a load-bearing fix by itself.
   return `<div class="epic__icarus" data-epic-figure aria-hidden="true">
-    <video data-icarus-video data-wide-src="${wideMp4}" data-tall-src="${tallMp4}" data-wide-src-webm="${wideWebm}" data-tall-src-webm="${tallWebm}" data-breakpoint="${BREAKPOINT_PX}" muted playsinline webkit-playsinline preload="auto" poster="${assetUrl('icarus/icarus-01-ascend-wide.jpg')}"></video>
+    <video data-icarus-video data-wide-src="${wideMp4}" data-tall-src="${tallMp4}" data-wide-src-webm="${wideWebm}" data-tall-src-webm="${tallWebm}" data-breakpoint="${BREAKPOINT_PX}" muted playsinline webkit-playsinline preload="metadata" poster="${assetUrl('icarus/icarus-01-ascend-wide.jpg')}"></video>
   </div>`;
 }
 

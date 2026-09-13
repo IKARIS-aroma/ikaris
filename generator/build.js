@@ -37,9 +37,10 @@ function writePage(relPath, html) {
   return relPath;
 }
 
-function copyDir(src, dest) {
+function copyDir(src, dest, skip) {
   ensureDir(dest);
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (skip && skip.has(entry.name)) continue;
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
     if (entry.isDirectory()) copyDir(s, d);
@@ -53,7 +54,12 @@ function main() {
   ensureDir(OUT);
 
   console.log('Copying static assets...');
-  copyDir(path.join(ROOT, 'assets'), path.join(OUT, 'assets'));
+  // assets/labels/*.png are a Blender-only build input (blender/build_bottles.py
+  // bakes them into assets/models/*.glb's label texture at model-build time) —
+  // confirmed unreferenced by anything under generator/ or src/js/, so the live
+  // site never fetches them. Skip them here instead of shipping ~2.4MB of dead
+  // weight to every deploy.
+  copyDir(path.join(ROOT, 'assets'), path.join(OUT, 'assets'), new Set(['labels']));
   ensureDir(path.join(OUT, 'css'));
   fs.copyFileSync(path.join(ROOT, 'src/css/style.css'), path.join(OUT, 'css/style.css'));
   ensureDir(path.join(OUT, 'js'));

@@ -84,9 +84,11 @@
     }
 
     // Save-Data asks explicitly to skip non-essential heavy downloads —
-    // the hero video (5-9MB depending on variant/codec) is exactly that.
-    // Treated the same as prefers-reduced-motion: fall back to the static
-    // layout (poster image + real DOM text), never fetch the video at all.
+    // the hero video (measured 12-24MB depending on variant/codec — see
+    // the preload="metadata" comment in icarus-figure.js) is exactly
+    // that. Treated the same as prefers-reduced-motion: fall back to the
+    // static layout (poster image + real DOM text), never fetch the
+    // video at all.
     var saveData = !!(navigator.connection && navigator.connection.saveData);
 
     var reduceMotion = prefersReducedMotion || saveData;
@@ -97,7 +99,37 @@
       return;
     }
 
-    if (heroVideo && !heroVideo.currentSrc) loadVideoSource();
+    // Deferred to the first real scroll input, not called unconditionally
+    // here on DOMContentLoaded. Verified by actually inspecting network
+    // traffic: the moment loadVideoSource()'s warmup .play() call fires,
+    // Chrome issues an open-ended `Range: bytes=0-` request and pulls the
+    // ENTIRE file in one response — the preload attribute above only
+    // governs buffering *before* playback intent is signaled, so calling
+    // .play() immediately on page load defeats preload="metadata" just as
+    // thoroughly as preload="auto" did. Since the hero is the first thing
+    // on the page, most visitors scroll into it almost immediately anyway
+    // — the real win here is that a visitor who lands and leaves without
+    // scrolling never triggers this 12-24MB fetch at all, and for everyone
+    // else it no longer competes for bandwidth with fonts/CSS/images
+    // during the initial page load. wheel/touchstart/keydown cover the
+    // ways a real scroll gesture starts; if scrolling somehow happens by
+    // another means first, the loadedmetadata handler below still seeks
+    // to the correct position once the (now slightly delayed) load
+    // catches up, so there's no broken state, only a later start.
+    var videoStarted = false;
+    function startVideoOnce() {
+      if (videoStarted || !heroVideo || heroVideo.currentSrc) return;
+      videoStarted = true;
+      loadVideoSource();
+      window.removeEventListener('wheel', startVideoOnce);
+      window.removeEventListener('touchstart', startVideoOnce);
+      window.removeEventListener('keydown', startVideoOnce);
+    }
+    if (heroVideo) {
+      window.addEventListener('wheel', startVideoOnce, { passive: true });
+      window.addEventListener('touchstart', startVideoOnce, { passive: true });
+      window.addEventListener('keydown', startVideoOnce);
+    }
 
     var sky = root.querySelector('[data-epic-sky]');
     var clouds = root.querySelector('[data-epic-clouds]');
@@ -277,6 +309,12 @@
       // progress) when the correct source has genuinely changed.
       var resizeTimer = null;
       function maybeSwapVideoSource() {
+        // Before the deferred first load (see startVideoOnce above), the
+        // video has no src at all — a resize firing in that window (iOS's
+        // toolbar settling, a virtual keyboard) would otherwise read as
+        // "wrong source loaded" and trigger the very eager fetch the
+        // deferral exists to avoid, before the user has scrolled at all.
+        if (!videoStarted) return;
         var wanted = currentBreakpointSrc();
         if (video.getAttribute('src') === wanted) return;
         var progress = tl.scrollTrigger.progress;
