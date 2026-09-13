@@ -965,6 +965,32 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 }
 .epic__cue.is-hidden { opacity: 0; }
 .epic__cue::after { content: ''; width: 1px; height: 26px; background: var(--epic-ink-soft); animation: epic-cue-pulse 1.8s ease-in-out infinite; }
+
+/* Sound is opt-in and stays that way regardless of scroll position — unlike
+   the cue/actions above, this doesn't fade in/out with the story, since the
+   visitor should be able to toggle it at any point. Bottom-right is the one
+   corner of the hero nothing else occupies (cue/actions are bottom-center,
+   the narrative captions are bottom-left). bottom: 8vh, matching .epic__
+   actions rather than .epic__cue's 3vh — the sticky header (position:
+   sticky, not fixed) pushes .epic's own 100vh box so its last ~74px
+   (the header's own height) sits below the visible fold at typical
+   viewport heights; confirmed .epic__cue already has this same overflow
+   (measured 50px past the fold at 1280x800) but gets away with it by
+   fading out after progress 0.04, while .epic__actions' shallower 8vh
+   only clears the fold by ~10px. The toggle needs to stay usable for the
+   whole scroll like actions does, not just the opening beat like cue. */
+.epic__sound-toggle {
+  position: absolute; z-index: 8; right: var(--space-3); bottom: 8vh;
+  color: var(--bone);
+  background: rgba(20, 16, 12, 0.5);
+  border-radius: 50%;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.epic__sound-toggle:hover { background: rgba(20, 16, 12, 0.7); }
+.epic__sound-icon--on { display: none; }
+.epic__sound-toggle[aria-pressed="true"] .epic__sound-icon--off { display: none; }
+.epic__sound-toggle[aria-pressed="true"] .epic__sound-icon--on { display: block; }
 @keyframes epic-cue-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
 /* Reduced motion / no-JS-timeline fallback: a plain static resting hero,
@@ -979,7 +1005,14 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 .epic--static .epic__line,
 .epic--static .epic__sub { opacity: 1; }
 .epic--static .epic__cue,
-.epic--static .epic__particles { display: none; }
+.epic--static .epic__particles,
+/* icarus-cinematic.js never wires up the sound toggle's click handler in
+   this mode (its setup sits after the reduceMotion/!hasGSAP early return
+   that puts .epic--static on in the first place) — there's also no
+   scroll-scrubbed phases for ambient sound to track once static. Without
+   this the button still rendered, fully clickable, and did nothing. */
+.epic--static .epic__sound-toggle,
+.epic--static .epic__chapter { display: none; }
 .epic--static .epic__caption { margin: 0 auto var(--space-4); }
 .epic--static .epic__caption-sub { margin: 0 auto var(--space-4); text-align: center; }
 /* .epic__icarus dropped its own width/aspect-ratio when it went full-bleed

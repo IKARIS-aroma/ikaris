@@ -138,9 +138,64 @@
     var bottleEl = root.querySelector('[data-epic-bottle]');
     var cue = root.querySelector('[data-epic-cue]');
     var actions = root.querySelector('[data-epic-actions]');
+    // .epic__actions is opacity:0/pointer-events:none until progress 0.9,
+    // but its two <a> links were still real, unhidden, focusable DOM
+    // elements the whole time — a keyboard user tabbing through the page
+    // landed focus on them with nothing visible to show it, and pressing
+    // Enter still navigated (confirmed: opacity alone doesn't stop
+    // keyboard activation, only pointer-events does, and that has no
+    // effect on the Enter key). tabIndex -1 pulls them out of tab order
+    // until they're actually visible/live, matching how .showcase__panel
+    // (see generator/lib/showcase.js) correctly has no focusable children
+    // while hidden — this is the one place that pattern wasn't followed.
+    var actionLinks = actions ? actions.querySelectorAll('a') : [];
+    for (var ai = 0; ai < actionLinks.length; ai++) actionLinks[ai].tabIndex = -1;
     var lines = root.querySelectorAll('[data-epic-line]');
     var subs = root.querySelectorAll('[data-epic-sub]');
     var video = heroVideo;
+
+    // Sound is opt-in, off by default, and only ever starts inside the
+    // toggle's own click handler — a real user gesture, satisfying every
+    // browser's autoplay policy on its own, so there's no need to also
+    // wait for the scroll gesture startVideoOnce uses for the video.
+    // Audio() objects are only constructed here (not <audio> tags in the
+    // markup) so nothing about this fetches anything until the visitor
+    // actually opts in. Deliberately NOT persisted across visits (unlike
+    // the cart): every browser's autoplay policy requires a fresh gesture
+    // on each page load regardless, so a remembered "on" preference could
+    // only ever show the toggle in a state the page can't actually honor
+    // yet — a real click is unavoidable either way, so there's nothing to
+    // save by remembering it.
+    var soundToggle = root.querySelector('[data-epic-sound-toggle]');
+    var ambience = null;
+    var chime = null;
+    var soundEnabled = false;
+    var chimePlayed = false;
+    if (soundToggle) {
+      soundToggle.addEventListener('click', function () {
+        if (!ambience) {
+          ambience = new Audio(soundToggle.getAttribute('data-ambience-src'));
+          ambience.loop = true;
+          ambience.volume = 0.5;
+          chime = new Audio(soundToggle.getAttribute('data-chime-src'));
+          chime.volume = 0.7;
+        }
+        soundEnabled = !soundEnabled;
+        soundToggle.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
+        soundToggle.setAttribute('aria-label', soundEnabled ? 'Mute story sound' : 'Play with sound');
+        if (soundEnabled) {
+          // Only actually start if scroll progress is currently inside
+          // the hero — clicking the toggle after having scrolled past it
+          // (or before the section is reached) shouldn't start it playing
+          // off-screen; the onUpdate check below picks it up once the
+          // visitor scrolls into range.
+          var p = tl.scrollTrigger ? tl.scrollTrigger.progress : 0;
+          if (p > 0 && p < 1) ambience.play().catch(function () {});
+        } else {
+          ambience.pause();
+        }
+      });
+    }
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -279,11 +334,34 @@
           }
 
           cue.classList.toggle('is-hidden', p > 0.04);
-          actions.classList.toggle('is-live', p > 0.9);
+          var actionsLive = p > 0.9;
+          actions.classList.toggle('is-live', actionsLive);
+          for (var aj = 0; aj < actionLinks.length; aj++) actionLinks[aj].tabIndex = actionsLive ? 0 : -1;
           // The reveal itself now starts at 0.70 (rise+surface stretched
           // the back half of the scroll considerably) — the GLB needs real
           // lead time to fetch/parse before it's actually due on screen.
           if (p > 0.55) initBottle();
+
+          // Sound stays scoped to the hero itself — playing once the
+          // visitor scrolls in (if they've opted in), pausing once they
+          // scroll past it, rather than looping in the background while
+          // they browse the shop below. The chime lands at the same 58
+          // mark REBIRTH starts fading in at (see below) — chimePlayed
+          // resets once they've scrolled back above the ocean beat, so
+          // scrolling through again replays it instead of leaving it
+          // permanently spent after one pass.
+          if (soundEnabled && ambience) {
+            if (p > 0 && p < 1) { if (ambience.paused) ambience.play().catch(function () {}); }
+            else if (!ambience.paused) ambience.pause();
+          }
+          if (p > 0.58) {
+            if (!chimePlayed) {
+              chimePlayed = true;
+              if (soundEnabled && chime) { chime.currentTime = 0; chime.play().catch(function () {}); }
+            }
+          } else if (p < 0.5) {
+            chimePlayed = false;
+          }
 
           // Clouds drift on their own via CSS, but also parallax with
           // scroll so the sky itself feels like it's moving as you move,
