@@ -118,6 +118,29 @@
       gsap.ticker.lagSmoothing(0);
     }
 
+    // pin: true below measures .epic's box once at setup time and bakes
+    // that width/height into inline styles on the element and its
+    // .pin-spacer wrapper. iOS Safari's address bar/toolbar can still be
+    // animating in or out well after 'load' fires (its height briefly
+    // changes the visual viewport, sometimes the layout viewport too),
+    // so a measurement taken during that window can lock in a stale,
+    // too-narrow size for the rest of the session — reported live as the
+    // hero rendering in a narrow column with blank space beside it, while
+    // normal-flow elements like the header (never measured once and
+    // cached) render at the correct full width. window.visualViewport's
+    // resize event fires as that native chrome settles, which a plain
+    // window resize listener won't catch on its own here (nothing else
+    // changes the CSS viewport) — forcing ScrollTrigger to re-measure once
+    // things are actually stable fixes the stale-pin-size class of bug.
+    var refreshTimer = null;
+    function refreshSoon() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(function () { ScrollTrigger.refresh(); }, 200);
+    }
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', refreshSoon);
+    window.addEventListener('load', refreshSoon);
+    window.addEventListener('orientationchange', refreshSoon);
+
     // Thresholds re-derived from the actual baked video's beat windows (see
     // the caption comment further down) rather than the original abstract
     // percentages — those ran 8-10 points behind what the video was
