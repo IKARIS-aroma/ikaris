@@ -830,6 +830,19 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
   color: rgba(243, 239, 231, 0.85);
   letter-spacing: 0.03em;
   opacity: 0;
+  /* The plaque lives on each line itself, not the shared .epic__caption-sub
+     wrapper — that background was showing 100% of the time (opacity only
+     ever animated the TEXT, never the box), leaving an empty dark plaque
+     visible for the whole scroll, including stretches with no active
+     caption and the very end where it visually collided with the "Shop
+     Men"/"Shop Women" CTAs (reported live as the buttons looking "not
+     lined up"). Putting it here instead means the box rides the exact
+     same opacity tween as its text and simply isn't there between beats. */
+  padding: 0.75em 1.05em;
+  background: rgba(20, 16, 12, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius);
 }
 /* One word/phrase per caption carries the emotional weight of that line
    ("the sun", "to weep", "the sea", "kept") — picking it out in gold,
@@ -841,20 +854,16 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 .epic__accent { color: #e8c17a; font-style: italic; }
 
 /* The four narrative sub-lines, pulled out of .epic__caption into their own
-   small plaque anchored bottom-left — left-aligned, well clear of the
+   small area anchored bottom-left — left-aligned, well clear of the
    centered .epic__cue/.epic__actions below the fold, and sized to just the
-   text rather than a wide centered block. */
+   text rather than a wide centered block. Purely positional: no background
+   of its own (see .epic__sub below for why). */
 .epic__caption-sub {
   position: absolute; z-index: 7; left: var(--space-4);
   bottom: 8vh;
   text-align: left; width: fit-content; max-width: min(60vw, 340px);
   pointer-events: none;
   display: grid;
-  padding: 0.75em 1.05em;
-  background: rgba(20, 16, 12, 0.72);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  border-radius: var(--radius);
 }
 .epic__caption-sub > * { grid-area: 1 / 1; margin: 0; align-self: center; }
 
