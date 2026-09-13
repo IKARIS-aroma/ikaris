@@ -293,6 +293,39 @@ function initViewer(container, opts) {
     (gltf) => {
       if (disposed) return; // switched away from this panel before the GLB finished loading
       const model = gltf.scene;
+
+      // The bottle label texture is 2048x1440 — not power-of-two (1440
+      // isn't) — but its glTF sampler asks for REPEAT wrapping and a
+      // mipmap minFilter. Per the WebGL spec that combination on an NPOT
+      // texture makes it "incomplete" and renders as blank/transparent;
+      // WebGL2 (and Chrome's ANGLE layer generally) is forgiving about
+      // this, but Safari's WebGL implementation enforces it strictly —
+      // confirmed live as the label rendering everywhere except Safari,
+      // while the (power-of-two) normal maps were never affected. Force
+      // NPOT-safe sampler settings on any texture that actually is NPOT,
+      // rather than trying to fix it upstream in the asset (the label
+      // doesn't tile or need mipmaps at the size it's ever viewed at, so
+      // this has no visible cost).
+      model.traverse((obj) => {
+        if (!obj.material) return;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach((mat) => {
+          Object.keys(mat).forEach((key) => {
+            const tex = mat[key];
+            if (!tex || !tex.isTexture || !tex.image) return;
+            const w = tex.image.width, h = tex.image.height;
+            const isPOT = (n) => (n & (n - 1)) === 0;
+            if (w && h && (!isPOT(w) || !isPOT(h))) {
+              tex.wrapS = THREE.ClampToEdgeWrapping;
+              tex.wrapT = THREE.ClampToEdgeWrapping;
+              tex.minFilter = THREE.LinearFilter;
+              tex.generateMipmaps = false;
+              tex.needsUpdate = true;
+            }
+          });
+        });
+      });
+
       const box = new THREE.Box3().setFromObject(model);
       const size = new THREE.Vector3();
       const center = new THREE.Vector3();
