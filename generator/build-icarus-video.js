@@ -51,9 +51,16 @@ const BEATS = [
   { file: '10-surface', dur: 16, xfadeIn: SLOW_XFADE }, // the emphasized closing beat — longest hold, no trailing crossfade
 ];
 
+// tall was 540x960 (9:16) — meaningfully squarer than an actual modern
+// phone screen (iPhone 14/15, most current Android: ~9:19.5, ratio 0.4615).
+// object-fit: cover on the real, taller device viewport then had to crop
+// the VIDEO's WIDTH down to match, cutting into the wingspan/composition
+// from both sides — read live as "the pictures are a bit too zoomed in".
+// 540x1170 matches that real-device ratio, so cover needs only a sliver
+// of further cropping instead of a large horizontal slice.
 const VARIANTS = {
   wide: { w: 960, h: 540 },
-  tall: { w: 540, h: 960 },
+  tall: { w: 540, h: 1170 },
 };
 
 function buildFilterComplex(variant) {

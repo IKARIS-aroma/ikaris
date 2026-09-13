@@ -184,6 +184,25 @@ function initViewer(container, opts) {
   controls.autoRotate = autoRotate;
   controls.autoRotateSpeed = 2.2;
 
+  // OrbitControls unconditionally sets touch-action: none on its DOM
+  // element as soon as it's constructed (see vendor/OrbitControls.js's
+  // connect()), regardless of `enabled` — so even a purely decorative,
+  // non-interactive instance (the hero's bottle, enableControls: false)
+  // was silently swallowing every touch gesture starting over its canvas,
+  // for no benefit since dragging does nothing while disabled. On the
+  // hero that canvas scales up to fill nearly the whole screen right as
+  // the "Shop Men"/"Shop Women" CTAs fade in at the end of the pinned
+  // scroll — a swipe landing on that now-huge canvas simply never
+  // scrolled, which read live as the page getting stuck in exactly that
+  // spot. Where dragging IS wanted (product pages, showcase panels),
+  // don't disable touch scrolling outright either — pan-y lets a mostly-
+  // vertical swipe scroll the page natively while a mostly-horizontal one
+  // still reaches OrbitControls to rotate, the standard trade-off for a
+  // draggable object sitting in a scrollable page (confirmed live: the
+  // full-width, up to 52vh-tall interactive area made it hard to scroll
+  // past on mobile).
+  renderer.domElement.style.touchAction = enableControls ? 'pan-y' : 'auto';
+
   let userInteracted = false;
   let hintEl = null; // assigned below once the GLB loads and the hint is actually created
   controls.addEventListener('start', () => {

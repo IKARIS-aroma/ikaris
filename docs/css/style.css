@@ -282,7 +282,10 @@ textarea:focus-visible, [tabindex]:focus-visible {
   transition: opacity 0.6s ease;
 }
 .bottle-3d.is-ready { opacity: 1; }
-.bottle-3d canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; touch-action: none; }
+/* touch-action is set inline by bottle-viewer.js (pan-y where dragging is
+   enabled, auto otherwise) — see its comment for why that needs to win
+   over any CSS default here rather than the reverse. */
+.bottle-3d canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; }
 .bottle-3d:active canvas { cursor: grabbing; }
 .bottle-3d__hint {
   position: absolute; bottom: var(--space-2); left: 50%;
