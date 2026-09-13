@@ -1,6 +1,7 @@
-// Self-hosts the two Google Fonts families (Bodoni Moda, Jost) into
-// assets/fonts/ instead of loading them from fonts.googleapis.com/
-// fonts.gstatic.com at runtime. Every other heavy/interactive dependency
+// Self-hosts the Google Fonts families used sitewide (Bodoni Moda, Jost,
+// Cinzel) into assets/fonts/ instead of loading them from
+// fonts.googleapis.com/fonts.gstatic.com at runtime. Every other heavy/
+// interactive dependency
 // in this project (GSAP, Lenis, Three.js) is already vendored locally —
 // fonts were the one remaining external origin a page load actually
 // blocked on, since the browser has to fetch the Google-hosted CSS before
@@ -15,8 +16,8 @@
 //
 // Requires network access to Google Fonts. Not part of `npm run build`
 // (which stays fully offline) — run this once, commit assets/fonts/, and
-// re-run only if the font query in generator/lib/layout.js's FONT_QUERY
-// ever changes. Run: node generator/build-fonts.js
+// re-run only if FONT_QUERY below ever changes. Run:
+// node generator/build-fonts.js
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -24,8 +25,12 @@ const https = require('https');
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'assets', 'fonts');
 
-// Keep in sync with FONT_QUERY in generator/lib/layout.js.
-const FONT_QUERY = 'family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;0,6..96,600;1,6..96,500&family=Jost:wght@400;500;600&display=swap';
+// Cinzel: a Roman-inscriptional carved-stone display face, added for the
+// Icarus hero's oversized "chapter word" moments and the story/shop
+// hand-off line — a Greek myth about hubris calling for something with
+// more epic/mythic weight than Bodoni Moda's fashion-editorial Didone
+// feel, used sparingly rather than replacing the sitewide serif.
+const FONT_QUERY = 'family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;0,6..96,600;1,6..96,500&family=Jost:wght@400;500;600&family=Cinzel:wght@400;700&display=swap';
 const CSS_URL = `https://fonts.googleapis.com/css2?${FONT_QUERY}`;
 // A desktop Chrome UA — Google's CSS2 endpoint serves woff2 (the format
 // every current browser actually wants) only to UAs it recognizes as

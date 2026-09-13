@@ -37,6 +37,7 @@ function build() {
     <div class="epic__particles" data-epic-particles aria-hidden="true">${particles(14)}</div>
 
     ${renderIcarusFigure()}
+    <div class="epic__tint" data-epic-tint aria-hidden="true"></div>
 
     <div class="epic__bottle" data-epic-bottle${heroHas3D ? ` data-glb-url="${assetUrl('models/bottle-vesper.glb')}"` : ''} aria-hidden="true">${bottleImg}</div>
 
@@ -50,6 +51,11 @@ function build() {
       <p class="epic__sub" data-epic-sub="2">Too close. The wax began <span class="epic__accent">to weep</span>.</p>
       <p class="epic__sub" data-epic-sub="1">The sky would not hold him. He fell toward <span class="epic__accent">the sea</span>.</p>
       <p class="epic__sub" data-epic-sub="3">The sea <span class="epic__accent">kept</span> what the sky refused.</p>
+    </div>
+
+    <div class="epic__chapter" aria-hidden="true">
+      <p class="epic__chapter-word" data-epic-chapter="0">Hubris</p>
+      <p class="epic__chapter-word" data-epic-chapter="1">Rebirth</p>
     </div>
 
     <div class="epic__actions" data-epic-actions>
@@ -83,8 +89,18 @@ function build() {
   </section>
   `;
 
+  const chapterBreak = `
+  <section class="chapter-break">
+    <div class="container">
+      <p class="chapter-break__line reveal">The myth ends. <span class="chapter-break__accent">The scent</span> remains.</p>
+    </div>
+  </section>
+  `;
+
   const bodyHtml = `
   ${epic}
+
+  ${chapterBreak}
 
   ${gallery}
   `;

@@ -33,6 +33,12 @@
 
   --font-serif: 'Bodoni Moda', Didot, 'Times New Roman', serif;
   --font-sans: 'Jost', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Reserved for the Icarus hero's oversized chapter-word moments and the
+     story/shop hand-off line only — a carved-stone, Roman-inscriptional
+     face fits a Greek myth about hubris in a way Bodoni Moda's fashion-
+     editorial Didone doesn't, but swapping the whole site to it would
+     read as costume rather than a considered accent. */
+  --font-myth: 'Cinzel', var(--font-serif);
 
   --container: 1200px;
   --radius: 2px;
@@ -722,19 +728,60 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
   pointer-events: none;
 }
 /* Phase classes were already wired up by icarus-cinematic.js (one per
-   scroll segment) but nothing consumed them — the backdrop stayed static
-   the whole sequence. Cooling the wash once he starts falling ties the
-   background to the story instead of just the ocean panel at the bottom. */
-.epic__sky.phase-fall,
-.epic__sky.phase-ocean,
+   scroll segment) but fall/ocean/rise all shared this one identical
+   pale-mint wash — three narratively very different beats (falling in
+   fear, submerged in the depths, rising back up with the bottle) reading
+   as one indistinguishable stretch, and --epic-sea/--epic-sea-deep above
+   were defined for exactly this and never actually used. Split into a
+   real light -> dark -> light arc instead: cooling as he falls, genuinely
+   dark at the ocean floor (the story's one deliberate swing away from the
+   warm paper tones, same device as the hero/mobile-nav's --ink beats,
+   but earned here by the narrative rather than decorative), then
+   warming back toward the cream/gold the bottle-reveal beats need. */
+.epic__sky.phase-fall {
+  background:
+    radial-gradient(ellipse 30% 22% at 18% 26%, rgba(150,190,178,0.28) 0%, transparent 72%),
+    radial-gradient(ellipse 26% 20% at 78% 56%, rgba(100,140,150,0.24) 0%, transparent 72%),
+    radial-gradient(ellipse 36% 24% at 42% 84%, rgba(120,160,165,0.26) 0%, transparent 72%),
+    radial-gradient(ellipse at 68% 20%, #cfe0dc 0%, #8fb0ae 46%, var(--epic-sea) 100%);
+}
+.epic__sky.phase-ocean {
+  background:
+    radial-gradient(ellipse 32% 24% at 22% 30%, rgba(28,101,119,0.35) 0%, transparent 72%),
+    radial-gradient(ellipse 28% 22% at 74% 60%, rgba(13,49,64,0.4) 0%, transparent 72%),
+    radial-gradient(ellipse 40% 26% at 46% 86%, rgba(13,49,64,0.35) 0%, transparent 72%),
+    radial-gradient(ellipse at 68% 20%, var(--epic-sea) 0%, var(--epic-sea-deep) 55%, #061c24 100%);
+}
 .epic__sky.phase-rise {
   background:
-    radial-gradient(ellipse 30% 22% at 18% 26%, rgba(150,190,178,0.3) 0%, transparent 72%),
-    radial-gradient(ellipse 26% 20% at 78% 56%, rgba(128,170,164,0.26) 0%, transparent 72%),
-    radial-gradient(ellipse 36% 24% at 42% 84%, rgba(180,214,206,0.28) 0%, transparent 72%),
-    radial-gradient(ellipse at 68% 20%, #eef4ee 0%, #cfe2df 46%, #9fc4c2 100%);
+    radial-gradient(ellipse 30% 22% at 20% 24%, rgba(216,178,116,0.26) 0%, transparent 72%),
+    radial-gradient(ellipse 26% 20% at 80% 55%, rgba(198,156,96,0.22) 0%, transparent 72%),
+    radial-gradient(ellipse 36% 24% at 44% 84%, rgba(228,198,148,0.26) 0%, transparent 72%),
+    radial-gradient(ellipse at 68% 20%, #fbf3df 0%, var(--epic-cream) 48%, #cdb583 100%);
 }
 .epic__vignette { position: absolute; inset: 0; z-index: 9; pointer-events: none; box-shadow: inset 0 0 16vw 3vw rgba(45,32,18,0.16); }
+
+/* .epic__sky's phase-fall/-ocean/-rise backgrounds above sit at z-index 0,
+   fully hidden behind the always-opaque, full-bleed video (z-index 4,
+   confirmed by screenshotting mid-scroll — the illustration itself fills
+   every pixel, so the sky never shows through during normal playback).
+   They're still worth having as the backdrop for the one case where the
+   video ISN'T there to hide them (it fails to load, or the browser can't
+   decode either codec — confirmed this actually happens: this project's
+   own headless test browser has zero H.264 support), but the light/dark
+   story arc needs to visibly grade the video everyone else actually
+   sees. mix-blend-mode: multiply on a layer painted on top of the video
+   (not behind it) does that without touching the baked video files. */
+.epic__tint {
+  position: absolute; inset: 0; z-index: 4;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background: transparent;
+  transition: background 1.4s ease;
+}
+.epic__tint.phase-fall { background: rgba(60, 92, 98, 0.22); }
+.epic__tint.phase-ocean { background: rgba(4, 20, 28, 0.55); }
+.epic__tint.phase-rise { background: rgba(120, 95, 55, 0.12); }
 
 /* Soft, slow-drifting cloud smudges — an ambient CSS loop for constant
    motion, plus icarus-cinematic.js nudges the whole layer's transform from
@@ -867,6 +914,34 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 }
 .epic__caption-sub > * { grid-area: 1 / 1; margin: 0; align-self: center; }
 
+/* Oversized "chapter word" moments — the site's one deliberate display-
+   type device, landing at two beats (peak/hubris, the ocean-to-rise
+   pivot) where nothing else already occupies center screen: the bottle
+   (.epic__bottle) stays at opacity 0/scale 0 until 82, well after both.
+   Dead center rather than reusing .epic__caption's top slot — a subtitle-
+   sized container isn't built to hold type this large, and a poster-scale
+   word reads as its own graphic beat, not another line of caption. */
+.epic__chapter {
+  position: absolute; z-index: 6; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center; width: 100%; max-width: 92vw;
+  pointer-events: none;
+  display: grid;
+}
+.epic__chapter > * { grid-area: 1 / 1; margin: 0; align-self: center; justify-self: center; }
+.epic__chapter-word {
+  font-family: var(--font-myth); font-weight: 700;
+  font-size: clamp(2.6rem, 13vw, 8rem);
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--bone);
+  opacity: 0;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5), 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+@media (min-width: 700px) and (max-height: 720px) {
+  .epic__chapter-word { font-size: clamp(2rem, 9vw, 5rem); }
+}
+
 .epic__actions {
   position: absolute; z-index: 7; left: 50%; bottom: 8vh; transform: translateX(-50%);
   display: flex; gap: var(--space-2);
@@ -920,6 +995,24 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 @media (max-width: 700px) {
   .epic__bottle { width: clamp(140px, 40vw, 220px); height: 40vh; }
 }
+
+/* The Icarus hero used to cut directly into the gallery's "The
+   Compositions" heading the instant the pin released — the myth and the
+   shop reading as one undifferentiated scroll rather than the hero being
+   its own bounded experience with a deliberate close. One short line,
+   generously spaced, marks that the story has ended before the catalog
+   begins — .reveal (already wired up sitewide) handles the fade-in. */
+.chapter-break { padding: var(--space-6) 0; text-align: center; }
+.chapter-break__line {
+  margin: 0; font-family: var(--font-myth); font-weight: 400;
+  font-size: clamp(1.5rem, 3.6vw, 2.4rem);
+  letter-spacing: 0.04em;
+  color: var(--charcoal);
+}
+/* --gold, not .epic__accent's light gold-soft — this line sits on the
+   light --paper background, not the hero's dark scrim, and --gold is the
+   one already verified for AA contrast there (see the --gold comment). */
+.chapter-break__accent { color: var(--gold); font-style: italic; }
 
 /* =====================================================================
    THE GALLERY — the editorial product presentation replacing a plain

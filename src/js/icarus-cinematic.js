@@ -132,6 +132,7 @@
     }
 
     var sky = root.querySelector('[data-epic-sky]');
+    var tint = root.querySelector('[data-epic-tint]');
     var clouds = root.querySelector('[data-epic-clouds]');
     var particles = root.querySelector('[data-epic-particles]');
     var bottleEl = root.querySelector('[data-epic-bottle]');
@@ -270,6 +271,10 @@
           if (phase !== currentPhase) {
             sky.classList.remove.apply(sky.classList, PHASES);
             sky.classList.add(phase);
+            // tint is the layer actually visible during normal playback
+            // (painted on top of the video, not hidden behind it like
+            // sky) — see the .epic__tint comment in style.css.
+            if (tint) { tint.classList.remove.apply(tint.classList, PHASES); tint.classList.add(phase); }
             currentPhase = phase;
           }
 
@@ -379,6 +384,7 @@
     // two new captions below (2, 3) aren't in numeric DOM order.
     function line(idx) { return root.querySelector('[data-epic-line="' + idx + '"]'); }
     function sub(idx) { return root.querySelector('[data-epic-sub="' + idx + '"]'); }
+    function chapter(idx) { return root.querySelector('[data-epic-chapter="' + idx + '"]'); }
     // All six lines share one grid cell (see .epic__caption in style.css)
     // so the crossfades below must hand off sequentially, not overlap in
     // time — two lines partially visible at once means two lines of text
@@ -396,6 +402,19 @@
     // Starts with the bottle reveal (82) and clears out at 94, before the
     // bottle's final scale-up, so it never overlaps the bottle's neck/cap.
     if (line(1)) tl.to(line(1), { opacity: 1, duration: 6 }, 82).to(line(1), { opacity: 0, duration: 4 }, 94);
+
+    // Oversized "chapter word" beats (.epic__chapter, dead center) — the
+    // one place on the site this large a display face appears, so it's
+    // used twice, not sprinkled throughout. "Hubris" lands inside the
+    // same 6-14 peak window as sub(2) (pride, then the fall it causes,
+    // is the actual myth) — .epic__bottle is still opacity 0 the whole
+    // window so there's nothing to collide with dead center. "Rebirth"
+    // lands at 58-68, after sub(3) clears at 56 and before the bottle
+    // reveal proper starts at 82, right as .epic__sky is mid-crossfade
+    // from phase-ocean's dark depths back to phase-rise's warm tones —
+    // the word surfacing as the scene itself brightens.
+    if (chapter(0)) tl.to(chapter(0), { opacity: 0.94, duration: 2 }, 7).to(chapter(0), { opacity: 0, duration: 2 }, 12);
+    if (chapter(1)) tl.to(chapter(1), { opacity: 0.94, duration: 3 }, 58).to(chapter(1), { opacity: 0, duration: 3 }, 68);
 
     tl.to(actions, { opacity: 1, duration: 4 }, 96);
 
