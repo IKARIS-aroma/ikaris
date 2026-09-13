@@ -63,7 +63,10 @@ function build(gender) {
   const anyHas3D = products.some((p) => hasModel(p.slug));
   const importMap = anyHas3D ? `<script type="importmap">{"imports":{"three":"${url('/js/vendor/three.module.min.js')}"}}</script>` : '';
   const viewerScript = anyHas3D ? `<script type="module" src="${url('/js/bottle-viewer.js')}"></script>` : '';
-  const carouselScripts = `<script src="${url('/js/vendor/gsap.min.js')}"></script>
+  // See the same comment in home.js's cinematicScripts — defer preserves
+  // load order while letting the parser continue instead of blocking on
+  // each synchronous fetch+execute at the tail of body.
+  const carouselScripts = `<script src="${url('/js/vendor/gsap.min.js')}" defer></script>
 ${viewerScript}
 <script src="${url('/js/icarus-cinematic.js')}" defer></script>`;
 

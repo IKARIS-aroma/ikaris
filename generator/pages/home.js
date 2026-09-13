@@ -101,9 +101,16 @@ function build() {
   const anyHas3D = heroHas3D || men.concat(women).some((p) => hasModel(p.slug));
   const importMap = anyHas3D ? `<script type="importmap">{"imports":{"three":"${url('/js/vendor/three.module.min.js')}"}}</script>` : '';
   const viewerScript = anyHas3D ? `<script type="module" src="${url('/js/bottle-viewer.js')}"></script>` : '';
-  const cinematicScripts = `<script src="${url('/js/vendor/gsap.min.js')}"></script>
-<script src="${url('/js/vendor/ScrollTrigger.min.js')}"></script>
-<script src="${url('/js/vendor/lenis.min.js')}"></script>
+  // defer on all four (not just the last): without it, each of these
+  // synchronous <script src> tags pauses the parser to fetch AND execute
+  // before moving to the next one, right at the tail of body — deferring
+  // lets the browser fetch them without blocking and still preserves
+  // execution order (gsap -> ScrollTrigger -> lenis -> icarus-cinematic),
+  // which icarus-cinematic.js's top-of-file window.gsap/ScrollTrigger/
+  // Lenis reads depend on.
+  const cinematicScripts = `<script src="${url('/js/vendor/gsap.min.js')}" defer></script>
+<script src="${url('/js/vendor/ScrollTrigger.min.js')}" defer></script>
+<script src="${url('/js/vendor/lenis.min.js')}" defer></script>
 ${viewerScript}
 <script src="${url('/js/icarus-cinematic.js')}" defer></script>`;
 
