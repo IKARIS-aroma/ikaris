@@ -44,10 +44,16 @@ function optimize(file) {
   // Re-encode at max effort now that resolution dropped — PNG's own
   // compression doesn't get materially better with resolution alone.
   run(['png', step1, step2, '--slots', 'normalTexture', '--effort', '100']);
-  // near-lossless (not plain lossy) WebP for the bottle's printed label —
-  // the one texture that's actually read as an image (product name/text),
-  // where compression artifacts would be immediately visible up close.
-  run(['webp', step2, step3, '--slots', 'baseColorTexture', '--near-lossless', 'true']);
+  // The label (baseColorTexture) stays PNG, not WebP — shipped as WebP
+  // once and it rendered as a blank label on a real device even after a
+  // hard refresh (ruling out stale cache), while every local Chromium
+  // test showed it fine. A GLB-embedded texture is decoded via a Blob +
+  // object URL rather than a normal <img src="*.webp">, and that path
+  // apparently isn't as universally supported as plain WebP usage would
+  // suggest. PNG has no such risk on any device, so just re-compress it
+  // losslessly instead — a smaller win than WebP would have been, but a
+  // real one, and it can't silently blank out a customer's product page.
+  run(['png', step2, step3, '--slots', 'baseColorTexture', '--effort', '100']);
 
   const before = fs.statSync(srcPath).size;
   const after = fs.statSync(step3).size;
