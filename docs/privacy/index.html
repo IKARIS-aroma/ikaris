@@ -2,7 +2,14 @@
 <html lang="en-IN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- minimum-scale=1 stops pinch-zooming out below 100% — the page never
+     reflows narrower than device-width, so zooming out just reveals blank
+     space past the laid-out content (reported as the hero rendering in a
+     narrow column with a blank gutter beside it). maximum-scale is left
+     unset so zooming IN still works, since capping that too would break
+     pinch-to-magnify for low-vision users (an accessibility regression,
+     not a fix). -->
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <title>Privacy Policy | IKARIS</title>
 <meta name="description" content="How IKARIS handles data: browser-only cart storage, consent-gated analytics, DPDP Act rights, and why this student project takes no real payments.">
 <link rel="canonical" href="https://ikaris.pages.dev/privacy/">
