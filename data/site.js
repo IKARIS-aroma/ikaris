@@ -34,9 +34,6 @@ const ANALYTICS = {
   DEBUG: false,
 };
 
-const SEARCH_CONSOLE_VERIFICATION = 'PLACEHOLDER_GSC_VERIFICATION_TOKEN';
-const BING_VERIFICATION = 'PLACEHOLDER_BING_VERIFICATION_TOKEN';
-
 const NAV = [
   { label: 'Men', href: '/men/' },
   { label: 'Women', href: '/women/' },
@@ -69,8 +66,6 @@ module.exports = {
   SITE_URL,
   BRAND,
   ANALYTICS,
-  SEARCH_CONSOLE_VERIFICATION,
-  BING_VERIFICATION,
   NAV,
   FOOTER_LINKS,
   CONTACT,

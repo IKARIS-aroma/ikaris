@@ -1,4 +1,4 @@
-const { BRAND, ANALYTICS, SEARCH_CONSOLE_VERIFICATION, BING_VERIFICATION, NAV, FOOTER_LINKS, SOCIAL, SITE_URL } = require('../../data/site');
+const { BRAND, ANALYTICS, NAV, FOOTER_LINKS, SOCIAL, SITE_URL } = require('../../data/site');
 const { escapeHtml, escapeAttr } = require('./html');
 const { url, absoluteUrl, assetUrl } = require('./urls');
 
@@ -62,8 +62,6 @@ function renderHead(opts) {
 <meta name="description" content="${escapeAttr(description)}">
 <link rel="canonical" href="${canonicalAbs}">
 <meta name="robots" content="${noindex ? 'noindex,follow' : 'index,follow'}">
-<meta name="google-site-verification" content="${SEARCH_CONSOLE_VERIFICATION}">
-<meta name="msvalidate.01" content="${BING_VERIFICATION}">
 
 <meta property="og:type" content="${ogType}">
 <meta property="og:site_name" content="${BRAND.name}">
@@ -86,9 +84,7 @@ function renderHead(opts) {
 <link rel="icon" href="${assetUrl('favicon-192.png')}" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="${assetUrl('apple-touch-icon.png')}">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..500;0,6..96,600;1,6..96,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="${assetUrl('fonts/fonts.css')}">
 <link rel="stylesheet" href="${url('/css/style.css')}">
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ''}
 ${renderConsentDefaultScript()}

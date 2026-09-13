@@ -45,7 +45,21 @@
     if (close) close.addEventListener('click', shut);
     nav.addEventListener('click', function (e) { if (e.target === nav) shut(); });
     nav.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', shut); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && nav.classList.contains('is-open')) shut(); });
+    document.addEventListener('keydown', function (e) {
+      if (!nav.classList.contains('is-open')) return;
+      if (e.key === 'Escape') { shut(); return; }
+      // aria-modal="true" claims keyboard focus can't leave this dialog,
+      // but nothing was actually enforcing that — Tab/Shift+Tab could
+      // walk focus straight out into the page underneath. Wrap it back
+      // to the other end of the dialog's own focusable elements instead.
+      if (e.key !== 'Tab') return;
+      var focusable = nav.querySelectorAll('a, button');
+      if (!focusable.length) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
   }
 
   // ---------- Note pyramid accordion ----------

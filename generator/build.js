@@ -157,12 +157,45 @@ Sitemap: ${SITE_URL}/sitemap.xml
   // every load, but the fingerprint-free asset paths (icarus hero video,
   // models, product renders) never change content at the same URL, so they
   // can be cached forever.
+  //
+  // Security headers live under /* so they apply to every response
+  // (Cloudflare Pages merges headers from every matching block, so this
+  // doesn't clobber the cache rules above). script-src/style-src need
+  // 'unsafe-inline': the GTM bootstrap snippet, the Consent Mode defaults,
+  // and the per-page inline JSON-LD/product-data blocks are inline by
+  // design, and a static _headers file can't hand out a per-request nonce
+  // (that needs a Worker) — CSP hashes were the other option, but hashing
+  // every page's inline blocks adds real build complexity for a script
+  // that already only runs behind the analytics consent gate. The real,
+  // zero-risk wins are frame-ancestors (this site has no reason to ever
+  // be framed) and the origin allowlists actually being scoped to what's
+  // in use (GTM/GA4 — fonts are self-hosted via generator/build-fonts.js,
+  // so font-src/style-src need no external origin at all) rather than
+  // left wide open — extend the connect-src/script-src lists if Clarity or Meta Pixel
+  // (CLARITY_PROJECT_ID/META_PIXEL_ID in data/site.js) are ever turned on.
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
+    "img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com",
+    "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com",
+    "frame-src https://www.googletagmanager.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
   const headers = `/assets/*
   Cache-Control: public, max-age=31536000, immutable
 /js/*
   Cache-Control: public, max-age=31536000, immutable
 /*
   Cache-Control: public, max-age=0, must-revalidate
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Content-Security-Policy: ${csp}
 `;
   fs.writeFileSync(path.join(OUT, '_headers'), headers, 'utf8');
 
