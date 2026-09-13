@@ -454,7 +454,7 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
 /* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--line); padding: var(--space-5) 0 var(--space-3); background: var(--paper-2); }
 .footer-grid { display: grid; gap: var(--space-4); margin-bottom: var(--space-4); }
-@media (min-width: 700px) { .footer-grid { grid-template-columns: 1.4fr 1fr 1fr; } }
+@media (min-width: 700px) { .footer-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; } }
 .footer-grid h4 { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-2); }
 .footer-grid ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6em; }
 .footer-grid ul a { color: var(--charcoal); font-size: 0.9rem; }

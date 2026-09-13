@@ -1,4 +1,4 @@
-const { BRAND, ANALYTICS, SEARCH_CONSOLE_VERIFICATION, BING_VERIFICATION, NAV, FOOTER_LINKS, SITE_URL } = require('../../data/site');
+const { BRAND, ANALYTICS, SEARCH_CONSOLE_VERIFICATION, BING_VERIFICATION, NAV, FOOTER_LINKS, SOCIAL, SITE_URL } = require('../../data/site');
 const { escapeHtml, escapeAttr } = require('./html');
 const { url, absoluteUrl, assetUrl } = require('./urls');
 
@@ -146,6 +146,7 @@ function renderFooter() {
       </div>
       <div><h4>Shop</h4><ul>${shopLinks}</ul></div>
       <div><h4>Support</h4><ul>${supportLinks}</ul></div>
+      <div><h4>Follow</h4><ul><li><a href="${escapeAttr(SOCIAL.instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a></li></ul></div>
     </div>
     <div class="footer-bottom">
       <span>&copy; ${BRAND.established}&ndash;present ${escapeHtml(BRAND.name)}. ${escapeHtml(BRAND.origin)}. ${escapeHtml(BRAND.shipping)}.</span>

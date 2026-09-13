@@ -1,4 +1,4 @@
-const { BRAND, SITE_URL, CONTACT } = require('../../data/site');
+const { BRAND, SITE_URL, CONTACT, SOCIAL } = require('../../data/site');
 const { absoluteUrl } = require('./urls');
 
 const LOGO_MARK_PATH = '/assets/logo-mark.png';
@@ -22,6 +22,7 @@ function organizationNode() {
     },
     foundingDate: BRAND.established,
     slogan: BRAND.tagline,
+    sameAs: [SOCIAL.instagram],
   };
 }
 

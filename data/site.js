@@ -55,6 +55,14 @@ const CONTACT = {
   city: 'Kolkata, India',
 };
 
+// The share-token query string Instagram appends to a copied profile link
+// (?stkn=...) is a personal/session share token, not part of the profile's
+// actual address — dropped here since the canonical, tokenless URL is what
+// belongs in a public footer link and in JSON-LD sameAs.
+const SOCIAL = {
+  instagram: 'https://www.instagram.com/ikaris.aroma/',
+};
+
 module.exports = {
   BASE_PATH,
   SITE_DOMAIN,
@@ -66,4 +74,5 @@ module.exports = {
   NAV,
   FOOTER_LINKS,
   CONTACT,
+  SOCIAL,
 };
