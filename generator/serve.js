@@ -16,6 +16,45 @@ const { BASE_PATH } = require('../data/site');
 const ROOT = path.join(__dirname, '..', 'docs');
 const PORT = process.env.PORT || 8080;
 
+// This server used to serve every response with none of docs/_headers'
+// rules applied — including the CSP. That gap meant nothing tested
+// against this server ever actually exercised the CSP a real deploy
+// enforces, which is exactly how a missing `connect-src blob:` (the
+// GLTFLoader.js texture-loading path three.js's ImageBitmapLoader uses)
+// shipped and broke every 3D model's textures in production while every
+// local check here kept passing. Parsing and applying the same file this
+// server would otherwise leave for Cloudflare Pages to interpret closes
+// that blind spot for the next header-sensitive bug.
+function parseHeadersFile(text) {
+  const blocks = [];
+  let current = null;
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    if (!line.startsWith(' ') && !line.startsWith('\t')) {
+      current = { pattern: line.trim(), headers: {} };
+      blocks.push(current);
+    } else if (current) {
+      const idx = line.indexOf(':');
+      if (idx > -1) current.headers[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+  }
+  return blocks;
+}
+function patternToRegex(pattern) {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp('^' + escaped + '$');
+}
+let headerBlocks = [];
+try {
+  headerBlocks = parseHeadersFile(fs.readFileSync(path.join(ROOT, '_headers'), 'utf8'))
+    .map((b) => ({ regex: patternToRegex(b.pattern), headers: b.headers }));
+} catch (e) { /* no _headers yet (first run before a build) — serve without extra headers */ }
+function extraHeadersFor(urlPath) {
+  const merged = {};
+  for (const b of headerBlocks) if (b.regex.test(urlPath)) Object.assign(merged, b.headers);
+  return merged;
+}
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css',
@@ -31,6 +70,7 @@ const MIME = {
   '.ico': 'image/x-icon',
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
+  '.glb': 'model/gltf-binary',
 };
 
 http.createServer((req, res) => {
@@ -53,6 +93,7 @@ http.createServer((req, res) => {
     const ext = path.extname(filePath);
     const contentType = MIME[ext] || 'application/octet-stream';
     const range = req.headers.range;
+    const extraHeaders = extraHeadersFor(urlPath);
 
     if (range) {
       const match = /bytes=(\d*)-(\d*)/.exec(range);
@@ -63,6 +104,7 @@ http.createServer((req, res) => {
         'Content-Length': end - start + 1,
         'Content-Range': `bytes ${start}-${end}/${stat.size}`,
         'Accept-Ranges': 'bytes',
+        ...extraHeaders,
       });
       fs.createReadStream(filePath, { start, end }).pipe(res);
       return;
@@ -72,6 +114,7 @@ http.createServer((req, res) => {
       'Content-Type': contentType,
       'Content-Length': stat.size,
       'Accept-Ranges': 'bytes',
+      ...extraHeaders,
     });
     fs.createReadStream(filePath).pipe(res);
   });
