@@ -250,24 +250,49 @@
       currentBed = null;
     }
 
+    // On by default, per explicit request — but every browser still
+    // requires a real user gesture before any audio can actually start,
+    // toggle click or not (constructing the AudioContext is fine without
+    // one; calling .play() on it isn't). The toggle shows "on" from the
+    // first frame, and actual playback starts on the visitor's first
+    // wheel/touch/key input — the same gesture family startVideoOnce
+    // above already waits for to defer the hero video, so this doesn't
+    // add a second, different gesture requirement to satisfy.
+    var userMutedSound = false;
+    function activateSound() {
+      if (userMutedSound || soundEnabled) return;
+      if (!audioCtx) buildAudioGraph();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      soundEnabled = true;
+      // Only actually start if scroll progress is currently inside the
+      // hero — activating before the section is reached (or after
+      // scrolling past it) shouldn't start it playing off-screen; the
+      // onUpdate check below picks it up once the visitor scrolls into
+      // range. currentPhase already reflects wherever they are, tracked
+      // regardless of whether sound is on.
+      var p = tl.scrollTrigger ? tl.scrollTrigger.progress : 0;
+      if (p > 0 && p < 1) crossfadeToBed(bedNameForPhase(currentPhase));
+    }
+
     if (soundToggle) {
+      soundToggle.setAttribute('aria-pressed', 'true');
+      soundToggle.setAttribute('aria-label', 'Mute story sound');
+      window.addEventListener('wheel', activateSound, { passive: true, once: true });
+      window.addEventListener('touchstart', activateSound, { passive: true, once: true });
+      window.addEventListener('keydown', activateSound, { once: true });
+
       soundToggle.addEventListener('click', function () {
-        if (!audioCtx) buildAudioGraph();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        soundEnabled = !soundEnabled;
-        soundToggle.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
-        soundToggle.setAttribute('aria-label', soundEnabled ? 'Mute story sound' : 'Play with sound');
         if (soundEnabled) {
-          // Only actually start if scroll progress is currently inside
-          // the hero — clicking the toggle after having scrolled past it
-          // (or before the section is reached) shouldn't start it playing
-          // off-screen; the onUpdate check below picks it up once the
-          // visitor scrolls into range. currentPhase already reflects
-          // wherever they are, tracked regardless of whether sound is on.
-          var p = tl.scrollTrigger ? tl.scrollTrigger.progress : 0;
-          if (p > 0 && p < 1) crossfadeToBed(bedNameForPhase(currentPhase));
-        } else {
+          userMutedSound = true;
+          soundEnabled = false;
+          soundToggle.setAttribute('aria-pressed', 'false');
+          soundToggle.setAttribute('aria-label', 'Play with sound');
           silenceAllBeds();
+        } else {
+          userMutedSound = false;
+          soundToggle.setAttribute('aria-pressed', 'true');
+          soundToggle.setAttribute('aria-label', 'Mute story sound');
+          activateSound();
         }
       });
     }

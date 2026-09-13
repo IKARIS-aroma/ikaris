@@ -156,6 +156,7 @@
     if (!toggle) return;
     var music = null;
     var enabled = false;
+    var userMuted = false;
     // Only the homepage has an Icarus hero; on every other page this
     // just stays false forever, so the music plays as soon as enabled.
     var insideHero = false;
@@ -181,7 +182,15 @@
       }
     }
 
-    toggle.addEventListener('click', function () {
+    // On by default, per explicit request — but every browser still
+    // requires a real user gesture before any audio can actually start,
+    // toggle click or not. The toggle shows "on" (muted, not activated,
+    // is a distinction visitors shouldn't have to care about) from the
+    // first frame, and actual playback starts on the very first
+    // wheel/touch/key input anywhere on the page, same gesture family
+    // icarus-cinematic.js already waits for to defer the hero video.
+    function activate() {
+      if (userMuted || enabled) return;
       if (!music) {
         music = new Audio(toggle.getAttribute('data-music-src'));
         music.loop = true;
@@ -191,10 +200,28 @@
         // low per explicit request (0.2 still read as too present).
         music.volume = 0.1;
       }
-      enabled = !enabled;
-      toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-      toggle.setAttribute('aria-label', enabled ? 'Mute background music' : 'Play background music');
+      enabled = true;
       sync();
+    }
+    toggle.setAttribute('aria-pressed', 'true');
+    toggle.setAttribute('aria-label', 'Mute background music');
+    window.addEventListener('wheel', activate, { passive: true, once: true });
+    window.addEventListener('touchstart', activate, { passive: true, once: true });
+    window.addEventListener('keydown', activate, { once: true });
+
+    toggle.addEventListener('click', function () {
+      if (enabled) {
+        userMuted = true;
+        enabled = false;
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.setAttribute('aria-label', 'Play background music');
+        sync();
+      } else {
+        userMuted = false;
+        toggle.setAttribute('aria-pressed', 'true');
+        toggle.setAttribute('aria-label', 'Mute background music');
+        activate();
+      }
     });
   }
 
