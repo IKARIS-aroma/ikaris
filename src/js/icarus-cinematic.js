@@ -158,28 +158,102 @@
     // toggle's own click handler — a real user gesture, satisfying every
     // browser's autoplay policy on its own, so there's no need to also
     // wait for the scroll gesture startVideoOnce uses for the video.
-    // Audio() objects are only constructed here (not <audio> tags in the
-    // markup) so nothing about this fetches anything until the visitor
-    // actually opts in. Deliberately NOT persisted across visits (unlike
-    // the cart): every browser's autoplay policy requires a fresh gesture
-    // on each page load regardless, so a remembered "on" preference could
-    // only ever show the toggle in a state the page can't actually honor
-    // yet — a real click is unavoidable either way, so there's nothing to
-    // save by remembering it.
+    // Deliberately NOT persisted across visits (unlike the cart): every
+    // browser's autoplay policy requires a fresh gesture on each page
+    // load regardless, so a remembered "on" preference could only ever
+    // show the toggle in a state the page can't actually honor yet — a
+    // real click is unavoidable either way, so there's nothing to save
+    // by remembering it.
+    //
+    // One looping bed per story beat (wind for dawn/ascend/peak, thunder
+    // for the fall, underwater for the ocean depths, a soothing resolve
+    // for the rise) plus a one-shot splash exactly at the fall->ocean
+    // impact — replacing an earlier single ambience-loop-plus-chime
+    // version that read as thin and, per direct feedback, made the
+    // rebirth moment "sound like a notification" rather than a real
+    // sound effect. Crossfaded via the Web Audio API's GainNode.
+    // linearRampToValueAtTime rather than hand-rolling a volume ramp on
+    // a setInterval — sample-accurate, click-free, and the standard tool
+    // for this rather than reinventing it badly.
     var soundToggle = root.querySelector('[data-epic-sound-toggle]');
-    var ambience = null;
-    var chime = null;
+    var audioCtx = null;
+    var beds = null; // name -> { el, gain, started }
+    var splashAudio = null;
     var soundEnabled = false;
-    var chimePlayed = false;
+    var currentBed = null;
+    var splashPlayed = false;
+    var BED_RAMP = 1.3;
+
+    function bedNameForPhase(phase) {
+      if (phase === 'phase-fall') return 'thunder';
+      if (phase === 'phase-ocean') return 'underwater';
+      if (phase === 'phase-rise') return 'resolve';
+      return 'wind'; // phase-dawn, phase-ascend, phase-peak
+    }
+
+    function buildAudioGraph() {
+      var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextCtor();
+      var specs = {
+        wind: { src: soundToggle.getAttribute('data-wind-src'), level: 0.6 },
+        thunder: { src: soundToggle.getAttribute('data-thunder-src'), level: 0.55 },
+        underwater: { src: soundToggle.getAttribute('data-underwater-src'), level: 0.55 },
+        resolve: { src: soundToggle.getAttribute('data-resolve-src'), level: 0.6 },
+      };
+      beds = {};
+      Object.keys(specs).forEach(function (name) {
+        var el = new Audio(specs[name].src);
+        el.loop = true;
+        var source = audioCtx.createMediaElementSource(el);
+        var gain = audioCtx.createGain();
+        gain.gain.value = 0;
+        source.connect(gain).connect(audioCtx.destination);
+        beds[name] = { el: el, gain: gain, level: specs[name].level, started: false };
+      });
+      splashAudio = new Audio(soundToggle.getAttribute('data-splash-src'));
+      splashAudio.volume = 0.8;
+    }
+
+    // Ramps every bed toward its target (the named one up, everything
+    // else down) rather than hard-cutting — a phase change mid-scroll
+    // should sound like a dissolve between two ambiences, not a splice.
+    function crossfadeToBed(name, rampOverride) {
+      if (!audioCtx || currentBed === name) return;
+      var ramp = rampOverride || BED_RAMP;
+      var now = audioCtx.currentTime;
+      Object.keys(beds).forEach(function (key) {
+        var bed = beds[key];
+        if (key === name) {
+          if (!bed.started) { bed.started = true; bed.el.play().catch(function () {}); }
+          bed.gain.gain.cancelScheduledValues(now);
+          bed.gain.gain.setValueAtTime(bed.gain.gain.value, now);
+          bed.gain.gain.linearRampToValueAtTime(bed.level, now + ramp);
+        } else {
+          bed.gain.gain.cancelScheduledValues(now);
+          bed.gain.gain.setValueAtTime(bed.gain.gain.value, now);
+          bed.gain.gain.linearRampToValueAtTime(0, now + ramp);
+        }
+      });
+      currentBed = name;
+    }
+
+    function silenceAllBeds() {
+      if (!audioCtx) return;
+      var now = audioCtx.currentTime;
+      Object.keys(beds).forEach(function (key) {
+        var bed = beds[key];
+        bed.gain.gain.cancelScheduledValues(now);
+        bed.gain.gain.setValueAtTime(0, now);
+        bed.el.pause();
+        bed.started = false;
+      });
+      currentBed = null;
+    }
+
     if (soundToggle) {
       soundToggle.addEventListener('click', function () {
-        if (!ambience) {
-          ambience = new Audio(soundToggle.getAttribute('data-ambience-src'));
-          ambience.loop = true;
-          ambience.volume = 0.5;
-          chime = new Audio(soundToggle.getAttribute('data-chime-src'));
-          chime.volume = 0.7;
-        }
+        if (!audioCtx) buildAudioGraph();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         soundEnabled = !soundEnabled;
         soundToggle.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
         soundToggle.setAttribute('aria-label', soundEnabled ? 'Mute story sound' : 'Play with sound');
@@ -188,11 +262,12 @@
           // the hero — clicking the toggle after having scrolled past it
           // (or before the section is reached) shouldn't start it playing
           // off-screen; the onUpdate check below picks it up once the
-          // visitor scrolls into range.
+          // visitor scrolls into range. currentPhase already reflects
+          // wherever they are, tracked regardless of whether sound is on.
           var p = tl.scrollTrigger ? tl.scrollTrigger.progress : 0;
-          if (p > 0 && p < 1) ambience.play().catch(function () {});
+          if (p > 0 && p < 1) crossfadeToBed(bedNameForPhase(currentPhase));
         } else {
-          ambience.pause();
+          silenceAllBeds();
         }
       });
     }
@@ -346,25 +421,36 @@
           // lead time to fetch/parse before it's actually due on screen.
           if (p > 0.55) initBottle();
 
-          // Sound stays scoped to the hero itself — playing once the
-          // visitor scrolls in (if they've opted in), pausing once they
+          // Sound stays scoped to the hero itself — crossfaded to
+          // whichever bed matches the current beat while the visitor is
+          // opted in and inside the pinned section, silenced once they
           // scroll past it, rather than looping in the background while
-          // they browse the shop below. The chime lands at the same 58
-          // mark REBIRTH starts fading in at (see below) — chimePlayed
-          // resets once they've scrolled back above the ocean beat, so
+          // they browse the shop below (that's the header's separate
+          // background-music toggle's job — see experience.js).
+          //
+          // The fall->ocean handoff into "underwater" is the one that
+          // lands with the splash below, not a smooth dissolve like the
+          // others — a slow 1.3s fade-up there read as a gap between the
+          // splash hitting and the underwater ambience actually being
+          // present. A near-immediate ramp keeps the two tight instead.
+          if (soundEnabled) {
+            var targetBed = bedNameForPhase(phase);
+            if (p > 0 && p < 1) crossfadeToBed(targetBed, targetBed === 'underwater' ? 0.15 : null);
+            else if (currentBed) silenceAllBeds();
+          }
+          // The splash is a one-shot exactly at the fall->ocean impact
+          // (the same 0.38 threshold phaseForProgress uses for that
+          // boundary), not part of the crossfade above. splashPlayed
+          // resets once they've scrolled back above the fall beat, so
           // scrolling through again replays it instead of leaving it
           // permanently spent after one pass.
-          if (soundEnabled && ambience) {
-            if (p > 0 && p < 1) { if (ambience.paused) ambience.play().catch(function () {}); }
-            else if (!ambience.paused) ambience.pause();
-          }
-          if (p > 0.58) {
-            if (!chimePlayed) {
-              chimePlayed = true;
-              if (soundEnabled && chime) { chime.currentTime = 0; chime.play().catch(function () {}); }
+          if (p > 0.38) {
+            if (!splashPlayed) {
+              splashPlayed = true;
+              if (soundEnabled && splashAudio) { splashAudio.currentTime = 0; splashAudio.play().catch(function () {}); }
             }
-          } else if (p < 0.5) {
-            chimePlayed = false;
+          } else if (p < 0.34) {
+            splashPlayed = false;
           }
 
           // Clouds drift on their own via CSS, but also parallax with

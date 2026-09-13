@@ -75,7 +75,12 @@ function build() {
 
     <div class="epic__cue" data-epic-cue>Scroll</div>
 
-    <button type="button" class="icon-btn epic__sound-toggle" data-epic-sound-toggle aria-pressed="false" aria-label="Play with sound" data-ambience-src="${assetUrl('audio/hero-ambience.mp3')}" data-chime-src="${assetUrl('audio/hero-chime.mp3')}">
+    <button type="button" class="icon-btn epic__sound-toggle" data-epic-sound-toggle aria-pressed="false" aria-label="Play with sound"
+      data-wind-src="${assetUrl('audio/story-wind.mp3')}"
+      data-thunder-src="${assetUrl('audio/story-thunder.mp3')}"
+      data-splash-src="${assetUrl('audio/story-splash.mp3')}"
+      data-underwater-src="${assetUrl('audio/story-underwater.mp3')}"
+      data-resolve-src="${assetUrl('audio/story-resolve.mp3')}">
       <svg class="epic__sound-icon epic__sound-icon--off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>
       <svg class="epic__sound-icon epic__sound-icon--on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12"/></svg>
     </button>
