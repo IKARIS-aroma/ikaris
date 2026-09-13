@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const csso = require('csso');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'docs');
@@ -68,7 +69,13 @@ function main() {
     'labels', 'logo-full.jpg', 'logo-full.png', 'logo-full.webp', 'logo-mark.jpg',
   ]));
   ensureDir(path.join(OUT, 'css'));
-  fs.copyFileSync(path.join(ROOT, 'src/css/style.css'), path.join(OUT, 'css/style.css'));
+  // Minified at build time only — src/css/style.css keeps its extensive
+  // comments for maintainers; every visitor on every page load doesn't
+  // need them. csso (not hand-rolled regex stripping) handles comments,
+  // string literals, and url()/content: edge cases correctly.
+  const sourceCss = fs.readFileSync(path.join(ROOT, 'src/css/style.css'), 'utf8');
+  const minifiedCss = csso.minify(sourceCss).css;
+  fs.writeFileSync(path.join(OUT, 'css/style.css'), minifiedCss, 'utf8');
   ensureDir(path.join(OUT, 'js'));
   for (const f of ['analytics.js', 'cart.js', 'main.js', 'experience.js', 'debug.js', 'icarus-cinematic.js', 'bottle-viewer.js']) {
     fs.copyFileSync(path.join(ROOT, 'src/js', f), path.join(OUT, 'js', f));
