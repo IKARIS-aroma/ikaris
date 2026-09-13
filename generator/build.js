@@ -182,13 +182,17 @@ Sitemap: ${SITE_URL}/sitemap.xml
     // GLTFLoader.js loads every embedded (non-external-URI) glTF texture
     // via `URL.createObjectURL(new Blob([bufferView], {type: mimeType}))`,
     // so EVERY texture on the 3D bottle viewer (normal maps, the printed
-    // label) is a blob: image, not a self/data: one. Chromium tolerated
-    // this CSP missing blob: (loaded the textures anyway); Safari enforced
-    // the spec strictly and silently dropped them — the real cause of the
-    // "blank label" reports, not the GLB content those reports led three
-    // rounds of texture-format changes to (wrongly) suspect.
+    // label) is a blob: resource. Confirmed by actually reproducing this
+    // locally (this project's own dev server never applied _headers, so
+    // the CSP was never really exercised until a one-off server was built
+    // to replay it): the browser console shows "Fetch API cannot load
+    // blob:... Refused to connect because it violates the Content
+    // Security Policy" — a connect-src violation, because three.js's
+    // ImageBitmapLoader reads the blob via fetch(), not via a plain
+    // <img src="blob:...">. blob: in img-src alone (the first, wrong fix)
+    // never touched this at all — it needs to be in connect-src.
     "img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com",
-    "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com",
+    "connect-src 'self' blob: https://www.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com",
     "frame-src https://www.googletagmanager.com",
     "object-src 'none'",
     "base-uri 'self'",
