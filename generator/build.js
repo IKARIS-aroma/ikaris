@@ -178,7 +178,16 @@ Sitemap: ${SITE_URL}/sitemap.xml
     "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
-    "img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com",
+    // blob: is required, not optional decoration — the vendored
+    // GLTFLoader.js loads every embedded (non-external-URI) glTF texture
+    // via `URL.createObjectURL(new Blob([bufferView], {type: mimeType}))`,
+    // so EVERY texture on the 3D bottle viewer (normal maps, the printed
+    // label) is a blob: image, not a self/data: one. Chromium tolerated
+    // this CSP missing blob: (loaded the textures anyway); Safari enforced
+    // the spec strictly and silently dropped them — the real cause of the
+    // "blank label" reports, not the GLB content those reports led three
+    // rounds of texture-format changes to (wrongly) suspect.
+    "img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com",
     "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com",
     "frame-src https://www.googletagmanager.com",
     "object-src 'none'",
