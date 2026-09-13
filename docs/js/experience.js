@@ -185,7 +185,10 @@
       if (!music) {
         music = new Audio(toggle.getAttribute('data-music-src'));
         music.loop = true;
-        music.volume = 0.45;
+        // A real mastered track (measured peak ~0dB, RMS ~-10dB) unlike
+        // the hero's own quiet synthesized ambience (RMS ~-31dB) — needs
+        // real attenuation here to read as background, not foreground.
+        music.volume = 0.2;
       }
       enabled = !enabled;
       toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');

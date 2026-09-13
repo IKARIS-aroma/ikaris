@@ -778,19 +778,33 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
    video ISN'T there to hide them (it fails to load, or the browser can't
    decode either codec — confirmed this actually happens: this project's
    own headless test browser has zero H.264 support), but the light/dark
-   story arc needs to visibly grade the video everyone else actually
-   sees. mix-blend-mode: multiply on a layer painted on top of the video
-   (not behind it) does that without touching the baked video files. */
+   story arc needs to visibly grade the video everyone else actually sees.
+   First attempt used one .epic__tint div, mix-blend-mode: multiply, and
+   transitioned its `background` color directly between phases — reported
+   live as flickering in the hero. Both of those are independently known
+   trouble spots specifically over a <video> element: multiply forces the
+   compositor to re-blend against every new decoded frame rather than a
+   static image, and `background` isn't a GPU-accelerated property (unlike
+   transform/opacity), so animating it means a full repaint, composited
+   against a continuously-updating video, on every frame of the 1.4s
+   transition — both are exactly the kind of thing that shows up as
+   flicker/jank on real hardware without appearing in a same-machine dev
+   check. Rebuilt as three separate divs, each a fixed, never-animated
+   background color, cross-fading only via `opacity` (GPU-accelerated,
+   no repaint) and no blend mode (plain alpha compositing) — same visual
+   goal, without either suspect property. */
 .epic__tint {
   position: absolute; inset: 0; z-index: 4;
   pointer-events: none;
-  mix-blend-mode: multiply;
-  background: transparent;
-  transition: background 1.4s ease;
+  opacity: 0;
+  transition: opacity 1.4s ease;
 }
-.epic__tint.phase-fall { background: rgba(60, 92, 98, 0.22); }
-.epic__tint.phase-ocean { background: rgba(4, 20, 28, 0.55); }
-.epic__tint.phase-rise { background: rgba(120, 95, 55, 0.12); }
+.epic__tint--fall { background: rgb(70, 100, 105); }
+.epic__tint--ocean { background: rgb(6, 22, 30); }
+.epic__tint--rise { background: rgb(140, 110, 62); }
+.epic__tint--fall.is-active { opacity: 0.25; }
+.epic__tint--ocean.is-active { opacity: 0.5; }
+.epic__tint--rise.is-active { opacity: 0.15; }
 
 /* Soft, slow-drifting cloud smudges — an ambient CSS loop for constant
    motion, plus icarus-cinematic.js nudges the whole layer's transform from

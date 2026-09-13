@@ -45,7 +45,9 @@ function build() {
     <div class="epic__particles" data-epic-particles aria-hidden="true">${particles(14)}</div>
 
     ${renderIcarusFigure()}
-    <div class="epic__tint" data-epic-tint aria-hidden="true"></div>
+    <div class="epic__tint epic__tint--fall" data-epic-tint="phase-fall" aria-hidden="true"></div>
+    <div class="epic__tint epic__tint--ocean" data-epic-tint="phase-ocean" aria-hidden="true"></div>
+    <div class="epic__tint epic__tint--rise" data-epic-tint="phase-rise" aria-hidden="true"></div>
 
     <div class="epic__bottle" data-epic-bottle${heroHas3D ? ` data-glb-url="${assetUrl('models/bottle-vesper.glb')}"` : ''} aria-hidden="true">${bottleImg}</div>
 

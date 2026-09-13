@@ -126,7 +126,7 @@ function renderHeader(canonicalPath = '') {
     </a>
     <nav class="main-nav" aria-label="Primary"><ul>${navItems}</ul></nav>
     <div class="header-actions">
-      <button type="button" class="icon-btn ambient-music-toggle" data-ambient-music-toggle aria-pressed="false" aria-label="Play background music" data-music-src="${assetUrl('audio/ambient-jazz.mp3')}">
+      <button type="button" class="icon-btn ambient-music-toggle" data-ambient-music-toggle aria-pressed="false" aria-label="Play background music" data-music-src="${assetUrl('audio/background-music.mp3')}">
         <span class="ambient-music-icon ambient-music-icon--off">${ICON_SOUND_OFF}</span>
         <span class="ambient-music-icon ambient-music-icon--on">${ICON_SOUND_ON}</span>
       </button>

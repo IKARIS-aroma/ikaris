@@ -132,7 +132,7 @@
     }
 
     var sky = root.querySelector('[data-epic-sky]');
-    var tint = root.querySelector('[data-epic-tint]');
+    var tints = root.querySelectorAll('[data-epic-tint]');
     var clouds = root.querySelector('[data-epic-clouds]');
     var particles = root.querySelector('[data-epic-particles]');
     var bottleEl = root.querySelector('[data-epic-bottle]');
@@ -326,10 +326,14 @@
           if (phase !== currentPhase) {
             sky.classList.remove.apply(sky.classList, PHASES);
             sky.classList.add(phase);
-            // tint is the layer actually visible during normal playback
+            // tints are the layer actually visible during normal playback
             // (painted on top of the video, not hidden behind it like
-            // sky) — see the .epic__tint comment in style.css.
-            if (tint) { tint.classList.remove.apply(tint.classList, PHASES); tint.classList.add(phase); }
+            // sky) — see the .epic__tint comment in style.css for why
+            // this is three separate fixed-color divs cross-fading via
+            // opacity rather than one div animating its background color.
+            for (var ti = 0; ti < tints.length; ti++) {
+              tints[ti].classList.toggle('is-active', tints[ti].getAttribute('data-epic-tint') === phase);
+            }
             currentPhase = phase;
           }
 
