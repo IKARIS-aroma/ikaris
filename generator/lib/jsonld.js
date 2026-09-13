@@ -60,7 +60,20 @@ function breadcrumbListNode(items) {
   };
 }
 
+// One year out from whenever the site is actually built, not a literal
+// date someone has to remember to bump — the previous hardcoded
+// '2026-12-31' would have silently gone stale on every build after that
+// date with nothing (no CI, no build-time check) to catch it, eventually
+// getting every product flagged with an expired priceValidUntil in
+// Google Merchant Center / Search Console rich results.
+function oneYearFromNow() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function productNode(product, path, imagePath, priceValidUntil) {
+  if (!priceValidUntil) priceValidUntil = oneYearFromNow();
   return {
     '@type': 'Product',
     '@id': absoluteUrl(path) + '#product',

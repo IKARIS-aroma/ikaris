@@ -13,6 +13,25 @@
     try { return JSON.parse(el.textContent); } catch (e) { return null; }
   }
 
+  // Cart lines are read back from localStorage (readCart() in cart.js just
+  // JSON.parses whatever's there, no schema check) and interpolated below
+  // into innerHTML both as text and inside attribute values (aria-label,
+  // data-cart-*). Every value reaching this today originates from the
+  // generator's own server-escaped data-item-* attributes, so there's no
+  // live exploit through the current UI — but nothing stops a future
+  // feature (a gift note, a coupon name) from putting free text into a
+  // cart line, at which point this would be a real stored-DOM-XSS path.
+  // Same full escaping as generator/lib/html.js's escapeHtml/escapeAttr
+  // (HTML5 treats attribute and text escaping identically).
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   var BASE = document.body.dataset.basePath || '';
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -259,14 +278,14 @@
       cart.forEach(function (line) {
         var tr = document.createElement('tr');
         tr.innerHTML =
-          '<td class="cart-line__product"><img src="' + BASE + '/assets/thumbs/' + line.slug + '.jpg" width="56" height="76" alt="" loading="lazy">' +
-          '<div><strong>' + line.name + '</strong><br><span style="color:var(--muted);font-size:0.8rem;">' + line.variant + '</span></div></td>' +
+          '<td class="cart-line__product"><img src="' + BASE + '/assets/thumbs/' + escapeHtml(line.slug) + '.jpg" width="56" height="76" alt="" loading="lazy">' +
+          '<div><strong>' + escapeHtml(line.name) + '</strong><br><span style="color:var(--muted);font-size:0.8rem;">' + escapeHtml(line.variant) + '</span></div></td>' +
           '<td class="cart-line__price" data-label="Price">₹' + line.price.toLocaleString('en-IN') + '</td>' +
-          '<td class="cart-line__qty" data-label="Qty"><span class="qty-input"><button type="button" data-cart-dec="' + line.slug + '" aria-label="Decrease quantity">−</button>' +
-          '<input type="text" inputmode="numeric" value="' + line.qty + '" readonly aria-label="Quantity for ' + line.name + '">' +
-          '<button type="button" data-cart-inc="' + line.slug + '" aria-label="Increase quantity">+</button></span></td>' +
+          '<td class="cart-line__qty" data-label="Qty"><span class="qty-input"><button type="button" data-cart-dec="' + escapeHtml(line.slug) + '" aria-label="Decrease quantity">−</button>' +
+          '<input type="text" inputmode="numeric" value="' + line.qty + '" readonly aria-label="Quantity for ' + escapeHtml(line.name) + '">' +
+          '<button type="button" data-cart-inc="' + escapeHtml(line.slug) + '" aria-label="Increase quantity">+</button></span></td>' +
           '<td class="cart-line__total" data-label="Subtotal">₹' + (line.price * line.qty).toLocaleString('en-IN') + '</td>' +
-          '<td class="cart-line__remove"><button type="button" class="btn btn-ghost" data-cart-remove="' + line.slug + '" data-testid="cart-remove">Remove</button></td>';
+          '<td class="cart-line__remove"><button type="button" class="btn btn-ghost" data-cart-remove="' + escapeHtml(line.slug) + '" data-testid="cart-remove">Remove</button></td>';
         tableBody.appendChild(tr);
       });
 
@@ -357,7 +376,7 @@
     var summaryEl = document.querySelector('[data-cart-summary-checkout]');
     if (summaryEl) {
       summaryEl.innerHTML = cart.map(function (l) {
-        return '<div class="cart-summary__row"><span>' + l.name + ' (' + l.variant + ') &times; ' + l.qty + '</span><span>₹' + (l.price * l.qty).toLocaleString('en-IN') + '</span></div>';
+        return '<div class="cart-summary__row"><span>' + escapeHtml(l.name) + ' (' + escapeHtml(l.variant) + ') &times; ' + l.qty + '</span><span>₹' + (l.price * l.qty).toLocaleString('en-IN') + '</span></div>';
       }).join('') + '<div class="cart-summary__row cart-summary__row--total"><span>Total</span><span>₹' + value.toLocaleString('en-IN') + '</span></div>';
     }
 
@@ -446,7 +465,7 @@
       if (refEl) refEl.textContent = ref;
       if (summaryEl) {
         summaryEl.innerHTML = snapshot.items.map(function (it) {
-          return '<div class="cart-summary__row"><span>' + it.item_name + ' × ' + it.quantity + '</span><span>₹' + (it.price * it.quantity).toLocaleString('en-IN') + '</span></div>';
+          return '<div class="cart-summary__row"><span>' + escapeHtml(it.item_name) + ' × ' + it.quantity + '</span><span>₹' + (it.price * it.quantity).toLocaleString('en-IN') + '</span></div>';
         }).join('') + '<div class="cart-summary__row cart-summary__row--total"><span>Total</span><span>₹' + snapshot.value.toLocaleString('en-IN') + '</span></div>';
       }
 

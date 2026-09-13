@@ -98,7 +98,7 @@ function build(product) {
       { name: genderLabel, path: genderPath },
       { name: product.name, path },
     ]),
-    productNode(product, path, `/assets/thumbs/${product.slug}.jpg`, '2026-12-31'),
+    productNode(product, path, `/assets/thumbs/${product.slug}.jpg`),
   ]);
 
   const title = `${product.name} Eau de Parfum, ${genderLabel} | IKARIS`;
