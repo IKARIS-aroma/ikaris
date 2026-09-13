@@ -187,8 +187,9 @@
         music.loop = true;
         // A real mastered track (measured peak ~0dB, RMS ~-10dB) unlike
         // the hero's own quiet synthesized ambience (RMS ~-31dB) — needs
-        // real attenuation here to read as background, not foreground.
-        music.volume = 0.2;
+        // real attenuation to read as background, not foreground. Capped
+        // low per explicit request (0.2 still read as too present).
+        music.volume = 0.1;
       }
       enabled = !enabled;
       toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
