@@ -24,25 +24,21 @@
     }
     if (reduceMotion) { dismiss(); return; }
 
-    // The homepage hero's video gets its .src assigned by icarus-cinematic.js
-    // (a JS-driven wide/tall pick, not a static <source>), which runs after
-    // this script and isn't something window's own 'load' event waits on —
-    // so on a slow connection the preloader was clearing well before the
-    // heaviest asset on the page was actually ready, handing the visitor a
-    // blank hero mid-scroll-in. Hold for its metadata too when it's present.
-    var heroVideo = document.querySelector('[data-icarus-video]');
-    var safetyMs = 2200;
-    if (heroVideo) {
-      safetyMs = 4000; // a bit more grace before the safety net fires on slow connections
-      if (heroVideo.readyState >= 1 /* HAVE_METADATA */) {
-        window.setTimeout(dismiss, 400);
-      } else {
-        heroVideo.addEventListener('loadedmetadata', function () { window.setTimeout(dismiss, 400); }, { once: true });
-      }
-    } else {
-      window.addEventListener('load', function () { window.setTimeout(dismiss, 500); });
-    }
-    window.setTimeout(dismiss, safetyMs); // safety timeout so a slow asset never traps the visitor
+    // Used to also hold for the homepage hero video's loadedmetadata here
+    // (it gets its .src assigned by icarus-cinematic.js, not a static
+    // <source>, so window's own 'load' event never waited on it) — on a
+    // slow connection the preloader was clearing before the video was
+    // ready, handing the visitor a blank hero mid-scroll-in. That's now
+    // moot: icarus-cinematic.js's startVideoOnce() deliberately doesn't
+    // load the video at all until the visitor's first scroll (to stop
+    // downloading it unread — see that comment for the network evidence),
+    // so waiting here for loadedmetadata just meant every homepage visit
+    // sitting through the full safety timeout instead, since metadata
+    // load can't finish before a scroll that hasn't happened yet. The
+    // poster image is what's actually visible pre-scroll, and that's
+    // already in the initial HTML — nothing left to wait on beyond 'load'.
+    window.addEventListener('load', function () { window.setTimeout(dismiss, 500); });
+    window.setTimeout(dismiss, 2200); // safety timeout so a slow asset never traps the visitor
   }
 
   // ---------- Custom cursor ----------

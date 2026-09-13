@@ -114,7 +114,10 @@ function renderHeader(canonicalPath = '') {
 <header class="site-header">
   <div class="container site-header__bar">
     <a href="${url('/')}" class="brand-mark" data-testid="brand-logo">
-      <img src="${assetUrl('logo-mark.png')}" width="34" height="32" alt="${escapeAttr(BRAND.name)} emblem">
+      <picture>
+        <source srcset="${assetUrl('logo-mark.webp')}" type="image/webp">
+        <img src="${assetUrl('logo-mark.png')}" width="34" height="32" alt="${escapeAttr(BRAND.name)} emblem">
+      </picture>
       <span class="brand-mark__word">${escapeHtml(BRAND.name)}</span>
     </a>
     <nav class="main-nav" aria-label="Primary"><ul>${navItems}</ul></nav>
@@ -144,7 +147,10 @@ function renderFooter() {
   <div class="container">
     <div class="footer-grid">
       <div>
-        <img src="${assetUrl('logo-mark.png')}" width="40" height="38" alt="${escapeAttr(BRAND.name)} emblem">
+        <picture>
+          <source srcset="${assetUrl('logo-mark.webp')}" type="image/webp">
+          <img src="${assetUrl('logo-mark.png')}" width="40" height="38" alt="${escapeAttr(BRAND.name)} emblem">
+        </picture>
         <p>${escapeHtml(BRAND.tagline)}</p>
       </div>
       <div><h4>Shop</h4><ul>${shopLinks}</ul></div>
@@ -201,7 +207,7 @@ function renderPage(opts) {
 ${head}
 <body data-page-type="${escapeAttr(pageType)}" data-page-category="${escapeAttr(pageCategory)}" data-page-slug="${escapeAttr(pageSlug)}" data-base-path="${escapeAttr(require('../../data/site').BASE_PATH)}">
 ${renderGtmNoscript()}
-<div class="preloader" aria-hidden="true"><img src="${assetUrl('logo-mark.png')}" alt=""></div>
+<div class="preloader" aria-hidden="true"><picture><source srcset="${assetUrl('logo-mark.webp')}" type="image/webp"><img src="${assetUrl('logo-mark.png')}" alt=""></picture></div>
 <noscript><style>.preloader{display:none!important}</style></noscript>
 <div class="grain" aria-hidden="true"></div>
 ${renderHeader(canonicalPath)}

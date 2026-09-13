@@ -57,9 +57,16 @@ function main() {
   // assets/labels/*.png are a Blender-only build input (blender/build_bottles.py
   // bakes them into assets/models/*.glb's label texture at model-build time) —
   // confirmed unreferenced by anything under generator/ or src/js/, so the live
-  // site never fetches them. Skip them here instead of shipping ~2.4MB of dead
-  // weight to every deploy.
-  copyDir(path.join(ROOT, 'assets'), path.join(OUT, 'assets'), new Set(['labels']));
+  // site never fetches them. logo-full.{jpg,png,webp} are equally unreferenced
+  // anywhere in the site (confirmed by grep) — nothing on the site ever shows
+  // the full wordmark logo as an image, only the mark (see logo-mark.png below)
+  // plus real text. logo-mark.jpg is process-assets.js's own source photo for
+  // knocking out the white background into logo-mark.png — an input to that
+  // pipeline, not a served asset. Skip all of these rather than shipping
+  // ~2.9MB of dead weight to every deploy.
+  copyDir(path.join(ROOT, 'assets'), path.join(OUT, 'assets'), new Set([
+    'labels', 'logo-full.jpg', 'logo-full.png', 'logo-full.webp', 'logo-mark.jpg',
+  ]));
   ensureDir(path.join(OUT, 'css'));
   fs.copyFileSync(path.join(ROOT, 'src/css/style.css'), path.join(OUT, 'css/style.css'));
   ensureDir(path.join(OUT, 'js'));
