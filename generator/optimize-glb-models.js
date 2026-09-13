@@ -38,28 +38,27 @@ function optimize(file) {
   // texture/.bin files dumped into assets/models/ instead of a single .glb.
   const step1 = srcPath.replace(/\.glb$/, '.step1.glb');
   const step2 = srcPath.replace(/\.glb$/, '.step2.glb');
-  const step3 = srcPath.replace(/\.glb$/, '.step3.glb');
 
   run(['resize', srcPath, step1, '--pattern', '*Normal*', '--width', String(NORMAL_MAX_PX), '--height', String(NORMAL_MAX_PX)]);
   // Re-encode at max effort now that resolution dropped — PNG's own
   // compression doesn't get materially better with resolution alone.
   run(['png', step1, step2, '--slots', 'normalTexture', '--effort', '100']);
-  // The label (baseColorTexture) stays PNG, not WebP — shipped as WebP
-  // once and it rendered as a blank label on a real device even after a
-  // hard refresh (ruling out stale cache), while every local Chromium
-  // test showed it fine. A GLB-embedded texture is decoded via a Blob +
-  // object URL rather than a normal <img src="*.webp">, and that path
-  // apparently isn't as universally supported as plain WebP usage would
-  // suggest. PNG has no such risk on any device, so just re-compress it
-  // losslessly instead — a smaller win than WebP would have been, but a
-  // real one, and it can't silently blank out a customer's product page.
-  run(['png', step2, step3, '--slots', 'baseColorTexture', '--effort', '100']);
+
+  // The label (baseColorTexture) is deliberately left byte-for-byte as
+  // Blender exported it — not resized, not re-encoded as WebP, not even
+  // re-run through a PNG optimizer. It went through two rounds of "safe"
+  // reprocessing (WebP, then a re-compressed PNG) and both shipped a
+  // blank label on real devices (confirmed on Safari) despite rendering
+  // correctly in every local Chromium test — so gltf-transform's own
+  // re-encoding is itself suspect here, not just the WebP format choice.
+  // The normal-map resize above is untouched by this and unrelated to the
+  // label bug (normal maps only affect bump/lighting, not baseColorTexture),
+  // so it still carries the large majority of the size win on its own.
 
   const before = fs.statSync(srcPath).size;
-  const after = fs.statSync(step3).size;
-  fs.renameSync(step3, srcPath);
+  const after = fs.statSync(step2).size;
+  fs.renameSync(step2, srcPath);
   fs.unlinkSync(step1);
-  fs.unlinkSync(step2);
   console.log(`${file}: ${(before / 1e6).toFixed(2)}MB -> ${(after / 1e6).toFixed(2)}MB`);
 }
 
