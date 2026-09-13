@@ -22,7 +22,15 @@ function build() {
   const women = PRODUCTS.filter((p) => p.gender === 'women');
 
   const heroHas3D = hasModel('vesper');
-  const bottleImg = picture({ assetPathNoExt: 'products/vesper', width: 586, height: 996, alt: '', loading: 'eager', fetchpriority: 'high' });
+  // Not eager/high-priority like product.js's identical-looking call —
+  // there this same picture() IS the above-the-fold LCP image; here it's
+  // .epic__bottle's WebGL fallback, which stays opacity:0/scale:0.001
+  // until scroll progress 82% (see icarus-cinematic.js) and is discarded
+  // unseen entirely for the majority of visitors whose browser supports
+  // WebGL (initBottle() takes over instead). Confirmed via a network
+  // trace that this was downloading immediately at page load, competing
+  // for priority against the fonts/CSS that actually gate first paint.
+  const bottleImg = picture({ assetPathNoExt: 'products/vesper', width: 586, height: 996, alt: '', loading: 'lazy' });
 
   const epic = `
   <section class="epic" data-epic>
