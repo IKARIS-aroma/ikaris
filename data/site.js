@@ -60,12 +60,12 @@ const SOCIAL = {
   instagram: 'https://www.instagram.com/ikaris.aroma/',
 };
 
-// Placeholders, same pattern as ANALYTICS above — replace with the real
-// values from your own Mailchimp account (see README "Email marketing
-// setup"). Until then the form still renders but posts nowhere useful.
+// Real values from the IKARIS Mailchimp account's embedded signup form
+// (Audience → Forms → Other forms → Embedded forms). See README "Email
+// marketing setup" for how these were obtained / how to regenerate them.
 const NEWSLETTER = {
-  mailchimpAction: 'https://YOUR-SUBDOMAIN.list-manage.com/subscribe/post?u=YOUR_U&id=YOUR_LIST_ID',
-  mailchimpHoneypotName: 'b_YOUR_U_YOUR_LIST_ID',
+  mailchimpAction: 'https://dev.us10.list-manage.com/subscribe/post?u=df1bffcd392989efa55941089&id=41bd61069e&f_id=002e4ce0f0',
+  mailchimpHoneypotName: 'b_df1bffcd392989efa55941089_41bd61069e',
 };
 
 module.exports = {
