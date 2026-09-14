@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const csso = require('csso');
+const terser = require('terser');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'docs');
@@ -49,7 +50,7 @@ function copyDir(src, dest, skip) {
   }
 }
 
-function main() {
+async function main() {
   console.log('Cleaning output...');
   fs.rmSync(OUT, { recursive: true, force: true });
   ensureDir(OUT);
@@ -77,8 +78,21 @@ function main() {
   const minifiedCss = csso.minify(sourceCss).css;
   fs.writeFileSync(path.join(OUT, 'css/style.css'), minifiedCss, 'utf8');
   ensureDir(path.join(OUT, 'js'));
+  // Minified at build time only, same reasoning as the CSS above — these
+  // carry the same extensive maintainer comments as their source and
+  // were shipping byte-for-byte (measured: ~24.5KB gzipped saved across
+  // the two files that load on every page, main.js and cart.js, once
+  // terser's actually applied). bottle-viewer.js alone is an ES module
+  // (import/export, loaded via <script type="module">) — vendor/ is left
+  // untouched, both because gsap/ScrollTrigger/lenis/three ship already
+  // minified and because re-minifying third-party code not written here
+  // (GLTFLoader/OrbitControls/RoomEnvironment) risks subtly breaking it
+  // for a much smaller win than the first-party files below.
   for (const f of ['analytics.js', 'cart.js', 'main.js', 'experience.js', 'debug.js', 'icarus-cinematic.js', 'bottle-viewer.js']) {
-    fs.copyFileSync(path.join(ROOT, 'src/js', f), path.join(OUT, 'js', f));
+    const source = fs.readFileSync(path.join(ROOT, 'src/js', f), 'utf8');
+    const result = await terser.minify(source, { module: f === 'bottle-viewer.js' });
+    if (result.error) throw result.error;
+    fs.writeFileSync(path.join(OUT, 'js', f), result.code, 'utf8');
   }
   copyDir(path.join(ROOT, 'src/js/vendor'), path.join(OUT, 'js/vendor'));
 
@@ -235,4 +249,4 @@ Sitemap: ${SITE_URL}/sitemap.xml
   console.log(`Done. ${built.length + 1} pages, ${indexable.length} indexable in sitemap.`);
 }
 
-main();
+main().catch((err) => { console.error(err); process.exit(1); });

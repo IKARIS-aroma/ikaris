@@ -39,7 +39,7 @@ function showcase(products, { listId, listName, gender }) {
     <div class="showcase__stage">${panels}</div>
     <div class="showcase__caption">
       <button type="button" class="showcase__arrow" data-showcase-prev aria-label="Previous fragrance">&larr;</button>
-      <div class="showcase__info">
+      <div class="showcase__info" aria-live="polite">
         <h3 class="showcase__name" data-showcase-name>${escapeHtml(first.name)}</h3>
         <p class="showcase__char"><span data-showcase-char>${escapeHtml(first.character || '')}</span> &middot; <span data-showcase-price>&#8377;${first.price.toLocaleString('en-IN')}</span></p>
         <a href="${url(`/fragrances/${first.slug}/`)}" class="showcase__link" data-showcase-link data-select-item data-testid="showcase-view"

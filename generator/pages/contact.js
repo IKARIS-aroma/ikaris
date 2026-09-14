@@ -29,9 +29,8 @@ function build() {
   `;
 
   const jsonLd = wrapGraph([
-    organizationNode(), brandNode(), websiteNode(),
+    organizationNode(contactPointNode()), brandNode(), websiteNode(),
     breadcrumbListNode([{ name: 'Home', path: '/' }, { name: 'Contact', path }]),
-    contactPointNode(),
   ]);
 
   const html = renderPage({

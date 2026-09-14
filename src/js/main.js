@@ -93,7 +93,7 @@
         btn.setAttribute('aria-expanded', String(willOpen));
         if (willOpen && !btn.dataset.viewed) {
           btn.dataset.viewed = '1';
-          window.track('view_notes', { item_id: document.body.dataset.pageCategory === null ? undefined : (pageData() && pageData().item ? pageData().item.item_id : undefined) });
+          window.track('view_notes', { item_id: pageData() && pageData().item ? pageData().item.item_id : undefined });
         }
       });
     });
@@ -137,25 +137,11 @@
     });
   }
 
-  // ---------- Collection view_item_list + sort ----------
+  // ---------- Collection view_item_list ----------
   function initCollectionList() {
     var data = pageData();
     if (!data || data.type !== 'collection') return;
     fireViewItemList(data.items, data.listId, data.listName);
-
-    var sortSelect = document.querySelector('[data-sort-select]');
-    var grid = document.querySelector('[data-product-grid]');
-    if (!sortSelect || !grid) return;
-    sortSelect.addEventListener('change', function () {
-      var value = sortSelect.value;
-      var cards = Array.prototype.slice.call(grid.children);
-      var sorted = cards.slice();
-      if (value === 'price-asc') sorted.sort(function (a, b) { return Number(a.dataset.price) - Number(b.dataset.price); });
-      else if (value === 'price-desc') sorted.sort(function (a, b) { return Number(b.dataset.price) - Number(a.dataset.price); });
-      else sorted.sort(function (a, b) { return Number(a.dataset.index) - Number(b.dataset.index); });
-      sorted.forEach(function (card) { grid.appendChild(card); });
-      window.track('filter_use', { filter_type: 'sort', filter_value: value });
-    });
   }
 
   function fireViewItemList(items, listId, listName) {

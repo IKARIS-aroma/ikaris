@@ -7,7 +7,14 @@ function wrapGraph(nodes) {
   return { '@context': 'https://schema.org', '@graph': nodes.filter(Boolean) };
 }
 
-function organizationNode() {
+// contactPoint is optional (only contact.js has one to attach) — nested
+// directly on the Organization node rather than emitted as its own
+// top-level @graph entry. A previous version did the latter (see
+// contactPointNode below) with no @id linking it back, which validated
+// fine as schema.org but left Google unable to associate the ContactPoint
+// with the Organization it was obviously meant to describe — confirmed
+// by checking the actual built output, nothing referenced it.
+function organizationNode(contactPoint) {
   return {
     '@type': 'Organization',
     '@id': `${SITE_URL}/#organization`,
@@ -23,6 +30,7 @@ function organizationNode() {
     foundingDate: BRAND.established,
     slogan: BRAND.tagline,
     sameAs: [SOCIAL.instagram],
+    ...(contactPoint ? { contactPoint } : {}),
   };
 }
 

@@ -113,7 +113,6 @@
     purchase: function () { window.track('purchase', { transaction_id: 'IK-DEBUG-' + Date.now(), currency: 'INR', value: 2800, items: [SAMPLE_ITEM] }); },
     view_notes: function () { window.track('view_notes', { item_id: 'noir' }); },
     guide_complete: function () { window.track('guide_complete', { guide_slug: 'how-to-choose-a-perfume' }); },
-    filter_use: function () { window.track('filter_use', { filter_type: 'sort', filter_value: 'price-asc' }); },
     price_band_view: function () { window.track('price_band_view', { price_band: 2800 }); },
     scroll_depth: function () { window.track('scroll_depth', { depth_percent: 50 }); },
     outbound_click: function () { window.track('outbound_click', { link_url: 'https://example.com', link_domain: 'example.com' }); },

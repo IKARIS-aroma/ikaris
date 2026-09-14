@@ -764,8 +764,12 @@
         // with (true right after a click/keypress on one) — plain page
         // load or a mouse click on prev/next shouldn't yank focus here.
         var hadFocus = document.activeElement && dotsWrap.contains(document.activeElement);
+        // aria-current marks the active dot for assistive tech — nothing
+        // here previously told a screen-reader user which fragrance (if
+        // any) the dots currently pointed at, only a CSS class sighted
+        // users could see.
         dotsWrap.innerHTML = panels.map(function (p, i) {
-          return '<button type="button" class="showcase__dot' + (i === current ? ' is-active' : '') + '" data-i="' + i + '" aria-label="Show ' + p.getAttribute('data-name') + '"></button>';
+          return '<button type="button" class="showcase__dot' + (i === current ? ' is-active' : '') + '" data-i="' + i + '"' + (i === current ? ' aria-current="true"' : '') + ' aria-label="Show ' + p.getAttribute('data-name') + '"></button>';
         }).join('');
         Array.prototype.slice.call(dotsWrap.querySelectorAll('button')).forEach(function (b) {
           b.addEventListener('click', function () { goTo(Number(b.getAttribute('data-i'))); });

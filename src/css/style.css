@@ -21,6 +21,14 @@
      read. */
   --gold: #63430f;
   --gold-soft: #7f5a1c;
+  /* --gold/--gold-soft are tuned for light --paper backgrounds (see the
+     comment above) — too dark to read against a dark surface. This is
+     the inverse: a light gold for text on --charcoal/--ink, at the same
+     "brass accent" hue. Was a bare hex only on .epic__accent; promoted
+     to a token once .btn-primary:hover needed the identical fix (2.71:1
+     against --charcoal with --gold-soft, confirmed via axe/contrast
+     check — WCAG AA needs 4.5:1; this is 9.9:1). */
+  --gold-on-dark: #e8c17a;
   --muted: #54504a;
   --line: rgba(30, 29, 27, 0.15);
   --danger: #a8483a;
@@ -230,7 +238,12 @@ textarea:focus-visible, [tabindex]:focus-visible {
 }
 .btn:hover { border-color: var(--gold); color: var(--gold); letter-spacing: 0.18em; }
 .btn-primary { background: var(--charcoal); color: var(--paper); border-color: var(--charcoal); }
-.btn-primary:hover { background: var(--charcoal); color: var(--gold-soft); border-color: var(--charcoal); letter-spacing: 0.18em; }
+/* --gold-on-dark, not --gold-soft — background stays --charcoal on
+   hover, and --gold-soft (tuned for light --paper backgrounds) measured
+   2.71:1 against it, well under WCAG AA's 4.5:1. This is the hover state
+   of every primary CTA site-wide (Add to Cart, Place Order, Proceed to
+   Checkout), so it's not a cosmetic corner case. */
+.btn-primary:hover { background: var(--charcoal); color: var(--gold-on-dark); border-color: var(--charcoal); letter-spacing: 0.18em; }
 .btn-ghost { border-color: var(--line); }
 .btn-ghost:hover { border-color: var(--charcoal); color: var(--charcoal); }
 .btn-block { width: 100%; }
@@ -435,6 +448,15 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
 /* ---------- About / policy pages ---------- */
 .prose { max-width: 72ch; margin: 0 auto; }
 .prose p { color: var(--muted); }
+/* axe-core flagged the privacy page's mailto link (and any future
+   in-paragraph link reusing this same .prose p pattern, e.g. on /about/
+   or /shipping-and-returns/) as a serious link-in-text-block violation:
+   --gold-soft link text against --muted paragraph text measures 1.28:1
+   (need 3:1) with text-decoration: none from the sitewide `a` rule, so
+   there's no non-color signal at all that it's a link. An underline
+   fixes it regardless of the color pairing, and only in body copy —
+   nav links, buttons, and cards keep their own distinct treatment. */
+.prose p a { text-decoration: underline; text-underline-offset: 0.15em; }
 .stat-row { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--space-3); margin: var(--space-4) 0; text-align: center; }
 @media (min-width: 700px) { .stat-row { grid-template-columns: repeat(4,1fr); } }
 .stat-row strong { display: block; font-family: var(--font-serif); font-size: 2rem; color: var(--gold-soft); }
@@ -463,7 +485,12 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
   font-size: 0.72rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gold-soft);
+  /* --gold-on-dark, not --gold-soft — this sits on .house-statement's
+     dark radial gradient (--ink-3/--ink-2/--ink), where --gold-soft
+     (tuned for light --paper backgrounds) measured 2.76-3.17:1 against
+     the gradient's stops, under WCAG AA's 4.5:1 and confirmed genuinely
+     hard to read live, not just a computed number. */
+  color: var(--gold-on-dark);
 }
 
 /* ---------- Footer ---------- */
@@ -917,11 +944,11 @@ body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button 
 /* One word/phrase per caption carries the emotional weight of that line
    ("the sun", "to weep", "the sea", "kept") — picking it out in gold,
    rather than leaving every word the same weight, is what makes the line
-   read as authored/art-directed rather than a plain caption. A lighter
-   gold than the sitewide --gold/--gold-soft tokens on purpose — those were
-   darkened for contrast against the site's light --paper background, which
-   would make them nearly invisible against this caption's dark scrim. */
-.epic__accent { color: #e8c17a; font-style: italic; }
+   read as authored/art-directed rather than a plain caption. --gold-on-dark,
+   not the sitewide --gold/--gold-soft tokens — those were darkened for
+   contrast against the site's light --paper background, which would make
+   them nearly invisible against this caption's dark scrim. */
+.epic__accent { color: var(--gold-on-dark); font-style: italic; }
 
 /* The four narrative sub-lines, pulled out of .epic__caption into their own
    small area anchored bottom-left — left-aligned, well clear of the
