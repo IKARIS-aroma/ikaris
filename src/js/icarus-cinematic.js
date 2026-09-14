@@ -194,6 +194,16 @@
     function buildAudioGraph() {
       var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AudioContextCtor();
+      // iOS Safari has a long-documented habit of leaving a freshly
+      // created/resumed AudioContext silent — not suspended, `.state`
+      // reads "running" — until a sound has actually been produced
+      // through it via a source node, not just .resume()'d. A 1-sample
+      // silent buffer costs nothing and is the standard workaround.
+      var unlockBuffer = audioCtx.createBuffer(1, 1, 22050);
+      var unlockSource = audioCtx.createBufferSource();
+      unlockSource.buffer = unlockBuffer;
+      unlockSource.connect(audioCtx.destination);
+      unlockSource.start(0);
       var specs = {
         wind: { src: soundToggle.getAttribute('data-wind-src'), level: 0.6 },
         thunder: { src: soundToggle.getAttribute('data-thunder-src'), level: 0.55 },
@@ -219,6 +229,11 @@
     // should sound like a dissolve between two ambiences, not a splice.
     function crossfadeToBed(name, rampOverride) {
       if (!audioCtx || currentBed === name) return;
+      // Cheap defensive re-check on every phase change, not just the
+      // initial activation — iOS can suspend the context again later
+      // (backgrounding, screen lock) without emitting an event that
+      // would reach the visibilitychange listener below in time.
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       var ramp = rampOverride || BED_RAMP;
       var now = audioCtx.currentTime;
       Object.keys(beds).forEach(function (key) {
@@ -262,17 +277,41 @@
     function activateSound() {
       if (userMutedSound || soundEnabled) return;
       if (!audioCtx) buildAudioGraph();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
       soundEnabled = true;
-      // Only actually start if scroll progress is currently inside the
-      // hero — activating before the section is reached (or after
-      // scrolling past it) shouldn't start it playing off-screen; the
-      // onUpdate check below picks it up once the visitor scrolls into
-      // range. currentPhase already reflects wherever they are, tracked
-      // regardless of whether sound is on.
-      var p = tl.scrollTrigger ? tl.scrollTrigger.progress : 0;
-      if (p > 0 && p < 1) crossfadeToBed(bedNameForPhase(currentPhase));
+      // resume() is async — on iOS specifically, scheduling gain ramps
+      // or reading audioCtx.currentTime before it actually resolves can
+      // silently produce no sound at all even though every individual
+      // .play() call succeeds, because the graph they're routed through
+      // is still suspended at the moment the ramp is scheduled (and
+      // currentTime doesn't advance while suspended, so the scheduled
+      // ramp is computed against a stale clock). Reported live as every
+      // bed except the two sounds that bypass this graph entirely
+      // (splash and the header's background music, both plain <audio>
+      // elements) being inaudible on iOS — exactly this class of bug.
+      // Waiting for the promise before touching the graph at all is the
+      // actual fix, not a defensive nicety.
+      var ready = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
+      ready.then(function () {
+        // Only actually start if scroll progress is currently inside the
+        // hero — activating before the section is reached (or after
+        // scrolling past it) shouldn't start it playing off-screen; the
+        // onUpdate check below picks it up once the visitor scrolls into
+        // range. currentPhase already reflects wherever they are,
+        // tracked regardless of whether sound is on.
+        var p = tl.scrollTrigger ? tl.scrollTrigger.progress : 0;
+        if (p > 0 && p < 1) crossfadeToBed(bedNameForPhase(currentPhase));
+      });
     }
+
+    // iOS can re-suspend an AudioContext when the tab backgrounds (app
+    // switch, screen lock) without firing any event on the context
+    // itself — catching that on the way back rather than leaving the
+    // graph silently stuck suspended until the next full phase change.
+    document.addEventListener('visibilitychange', function () {
+      if (audioCtx && document.visibilityState === 'visible' && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    });
 
     if (soundToggle) {
       soundToggle.setAttribute('aria-pressed', 'true');
