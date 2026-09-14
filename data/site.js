@@ -60,6 +60,14 @@ const SOCIAL = {
   instagram: 'https://www.instagram.com/ikaris.aroma/',
 };
 
+// Placeholders, same pattern as ANALYTICS above — replace with the real
+// values from your own Mailchimp account (see README "Email marketing
+// setup"). Until then the form still renders but posts nowhere useful.
+const NEWSLETTER = {
+  mailchimpAction: 'https://YOUR-SUBDOMAIN.list-manage.com/subscribe/post?u=YOUR_U&id=YOUR_LIST_ID',
+  mailchimpHoneypotName: 'b_YOUR_U_YOUR_LIST_ID',
+};
+
 module.exports = {
   BASE_PATH,
   SITE_DOMAIN,
@@ -70,4 +78,5 @@ module.exports = {
   FOOTER_LINKS,
   CONTACT,
   SOCIAL,
+  NEWSLETTER,
 };

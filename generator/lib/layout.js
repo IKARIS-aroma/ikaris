@@ -1,4 +1,4 @@
-const { BRAND, ANALYTICS, NAV, FOOTER_LINKS, SOCIAL, SITE_URL } = require('../../data/site');
+const { BRAND, ANALYTICS, NAV, FOOTER_LINKS, SOCIAL, SITE_URL, NEWSLETTER } = require('../../data/site');
 const { escapeHtml, escapeAttr } = require('./html');
 const { url, absoluteUrl, assetUrl } = require('./urls');
 
@@ -148,6 +148,21 @@ function renderHeader(canonicalPath = '') {
 </div>`;
 }
 
+function renderNewsletterSignup() {
+  return `<div class="newsletter-signup">
+        <h4>Stay in scent</h4>
+        <p>Occasional notes on new fragrances and the house. No spam, unsubscribe anytime.</p>
+        <form action="${escapeAttr(NEWSLETTER.mailchimpAction)}" method="post" target="_blank" class="newsletter-signup__form" data-testid="newsletter-form" novalidate>
+          <label for="newsletter-email" class="visually-hidden">Email address</label>
+          <input type="email" name="EMAIL" id="newsletter-email" placeholder="Email address" autocomplete="email" required data-clarity-mask="true" data-testid="newsletter-email">
+          <div aria-hidden="true" style="position:absolute;left:-5000px;" tabindex="-1">
+            <input type="text" name="${escapeAttr(NEWSLETTER.mailchimpHoneypotName)}" tabindex="-1" value="">
+          </div>
+          <button type="submit" class="btn btn-primary" data-testid="newsletter-submit">Subscribe</button>
+        </form>
+      </div>`;
+}
+
 function renderFooter() {
   const shopLinks = NAV.map((n) => `<li><a href="${url(n.href)}">${escapeHtml(n.label)}</a></li>`).join('');
   const supportLinks = FOOTER_LINKS.map((n) => `<li><a href="${url(n.href)}">${escapeHtml(n.label)}</a></li>`).join('');
@@ -164,6 +179,7 @@ function renderFooter() {
       <div><h4>Shop</h4><ul>${shopLinks}</ul></div>
       <div><h4>Support</h4><ul>${supportLinks}</ul></div>
       <div><h4>Follow</h4><ul><li><a href="${escapeAttr(SOCIAL.instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a></li></ul></div>
+      ${renderNewsletterSignup()}
     </div>
     <div class="footer-bottom">
       <span>&copy; ${BRAND.established}&ndash;present ${escapeHtml(BRAND.name)}. ${escapeHtml(BRAND.origin)}. ${escapeHtml(BRAND.shipping)}.</span>

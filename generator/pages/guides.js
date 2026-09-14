@@ -27,7 +27,7 @@ function buildIndex() {
     <div class="section-head reveal" style="text-align:left;max-width:none;margin-bottom:2rem;">
       <span class="eyebrow">Guides</span>
       <h1>Read before you choose a fragrance</h1>
-      <p style="max-width:65ch">Four short, practical guides on how fragrance actually works — notes, concentration, longevity, and how to choose without guessing.</p>
+      <p style="max-width:65ch">Short, practical guides on how fragrance actually works — notes, concentration, longevity, layering, climate, and how to choose without guessing.</p>
     </div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${cards}</div>
   </div>
@@ -40,7 +40,7 @@ function buildIndex() {
 
   const html = renderPage({
     title: 'Fragrance Guides — Notes, EDP vs EDT, Longevity | IKARIS',
-    description: 'Four practical guides to fragrance: how to choose a perfume, EDP vs EDT explained, making perfume last longer, and how notes actually work.',
+    description: 'Practical guides to fragrance: choosing a perfume, EDP vs EDT, making it last, layering, note structure, and what survives Indian summer heat.',
     canonicalPath: path,
     pageType: 'page',
     pageSlug: 'guides',

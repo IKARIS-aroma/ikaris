@@ -496,12 +496,22 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
 /* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--line); padding: var(--space-5) 0 var(--space-3); background: var(--paper-2); }
 .footer-grid { display: grid; gap: var(--space-4); margin-bottom: var(--space-4); }
-@media (min-width: 700px) { .footer-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; } }
+@media (min-width: 700px) { .footer-grid { grid-template-columns: 1.2fr 0.7fr 0.9fr 0.7fr 1.4fr; } }
 .footer-grid h4 { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-2); }
 .footer-grid ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6em; }
 .footer-grid ul a { color: var(--charcoal); font-size: 0.9rem; }
 .footer-bottom { border-top: 1px solid var(--line); padding-top: var(--space-2); display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--muted); }
 .footer-disclosure { font-size: 0.76rem; color: var(--muted); border-top: 1px dashed var(--line); margin-top: var(--space-2); padding-top: var(--space-2); }
+
+.newsletter-signup h4 { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-2); }
+.newsletter-signup p { font-size: 0.85rem; color: var(--muted); margin-bottom: var(--space-2); max-width: 32ch; }
+.newsletter-signup__form { display: flex; flex-wrap: wrap; gap: 0.6em; position: relative; }
+.newsletter-signup__form input[type="email"] {
+  flex: 1 1 160px; min-width: 0; padding: 0.65em 0.9em; border: 1px solid var(--line);
+  background: var(--paper); color: var(--charcoal); font-size: 0.85rem; font-family: inherit;
+}
+.newsletter-signup__form input[type="email"]:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.newsletter-signup__form .btn { white-space: nowrap; padding: 0.65em 1.2em; font-size: 0.8rem; }
 
 /* ---------- Consent banner ---------- */
 .consent-banner {

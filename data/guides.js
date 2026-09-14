@@ -274,6 +274,119 @@ const GUIDES = [
       },
     ],
   },
+  {
+    slug: 'best-perfumes-for-indian-summers',
+    title: 'Best Perfumes for Indian Summers',
+    metaTitle: 'Best Perfumes for Indian Summers | IKARIS',
+    metaDescription:
+      'Heat and humidity change how a fragrance performs. Here is which note families hold up in an Indian summer, which fall apart, and how to buy for it.',
+    datePublished: '2026-03-02',
+    dateModified: '2026-03-02',
+    blocks: [
+      {
+        type: 'p',
+        text: 'A fragrance that reads perfectly in an air-conditioned store can behave completely differently by the time you have walked two blocks in May heat. Heat speeds up evaporation across every note, humidity changes how far a scent carries, and sweat interacts with some materials far worse than others. Buying for an Indian summer means buying for those three facts, not for how a bottle smells on a test strip indoors.',
+      },
+      { type: 'h2', text: 'Why heat changes everything about a fragrance' },
+      {
+        type: 'p',
+        text: 'Higher skin temperature pulls aromatic molecules off the skin faster, which is why a fragrance seems to fade quicker in summer even though nothing about the bottle has changed. The same heat that shortens longevity also increases sillage in the short term — a fragrance can feel stronger in the first hour and weaker by the fourth, the opposite of how it might behave in cooler weather. Humidity adds another layer: moisture in the air slows evaporation slightly but also amplifies how a fragrance is perceived at close range, which is part of why heavy, syrupy fragrances can feel cloying in humid heat even when they are pleasant in dry cold.',
+      },
+      { type: 'h2', text: 'Note families that hold up in heat' },
+      {
+        type: 'ul',
+        items: [
+          'Citrus and aquatic notes — bergamot, grapefruit, sea salt, marine accords. They read as clean and cool precisely because they are light, and reapplying them through the day is easy and cheap in wear.',
+          'Green and herbal notes — vetiver, basil, mint, fig leaf. Sharp and grounding without adding perceived heat.',
+          'Light woods — cedar, ambrette. Enough structure to survive past the first hour without the density of a heavier amber base.',
+        ],
+      },
+      { type: 'h2', text: 'Note families that struggle' },
+      {
+        type: 'p',
+        text: 'Heavy orientals, thick amber bases, and sweet gourmand notes (vanilla, caramel, praline) are the most likely to turn cloying in heat and humidity. These families are built to be warm by design, and adding real ambient heat on top of that warmth tends to push a fragrance from "rich" to "heavy" fast, especially once sweat is involved. That does not mean they are unwearable in summer, only that they need a lighter hand — fewer sprays, applied to fewer points, worn in the evening once the temperature has dropped rather than at midday.',
+      },
+      { type: 'h2', text: 'Apply less, not differently' },
+      {
+        type: 'p',
+        text: 'The instinct in heat is often to spray more to compensate for faster fading, which usually backfires — more product plus more heat plus more sweat reads as overwhelming to people nearby well before it reads as "present" to you. Two sprays to pulse points, reapplied once mid-afternoon if needed, generally outperforms four sprays applied once in the morning.',
+      },
+      { type: 'h2', text: 'Consider concentration alongside notes' },
+      {
+        type: 'p',
+        html: 'A lighter eau de toilette in a heat-appropriate note family will often outperform a heavier eau de parfum in a heat-inappropriate one, because concentration and note family compound each other rather than cancel out. See our guide on <a href="/guides/eau-de-parfum-vs-eau-de-toilette/">eau de parfum versus eau de toilette</a> for how that trade-off works.',
+      },
+    ],
+    faq: [
+      {
+        q: 'Should I switch fragrances entirely for summer?',
+        a: 'Not necessarily, but it helps to have at least one lighter, citrus- or green-led fragrance in rotation for the hottest months, kept separate from a heavier one worn once the weather turns.',
+      },
+      {
+        q: 'Does storing perfume in the fridge help it last longer in summer heat?',
+        a: 'It can slow degradation slightly by keeping the bottle away from ambient heat swings, but a cool, dark drawer away from direct sunlight and bathroom humidity works just as well and is far more practical day to day.',
+      },
+    ],
+  },
+  {
+    slug: 'how-to-layer-fragrances',
+    title: 'How to Layer Fragrances',
+    metaTitle: 'How to Layer Fragrances Without Making a Mess | IKARIS',
+    metaDescription:
+      'Layering two fragrances can create something better than either alone, or a mess. Here is how to pick pairs, apply them in order, and when to stop.',
+    datePublished: '2026-03-04',
+    dateModified: '2026-03-04',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Layering — wearing two fragrances, or a fragrance and an unscented or lightly scented product, at the same time — is either how people build a genuinely personal signature scent, or how they end up smelling like a fight between two candles. The difference is almost entirely in how deliberately the pairing is chosen, not in whether layering itself is a good idea.',
+      },
+      { type: 'h2', text: 'Start with structure, not favourites' },
+      {
+        type: 'p',
+        text: "The instinct is to layer two favourite fragrances and hope they combine well. A better approach is to think about which layer each fragrance is strongest in. A fragrance with a bold, distinctive top note but a forgettable base pairs well with one that has an unremarkable opening but a rich, long base — worn together, the first fragrance's opening carries the pairing early, and the second's base carries it through the rest of the day.",
+      },
+      { type: 'h2', text: 'Match density, not scent family' },
+      {
+        type: 'p',
+        text: 'Two light fragrances layered together usually stay light and simply blend into something slightly more complex. Two heavy fragrances layered together usually compete rather than combine, since both are trying to dominate at the same intensity. The safer pairing is one light, one heavy — a citrus or green fragrance under an amber or woody one tends to work more often than two fragrances of similar weight.',
+      },
+      { type: 'h2', text: 'Apply in the right order' },
+      {
+        type: 'ol',
+        items: [
+          'Apply the heavier, longer-lasting fragrance first, closest to the skin, since base notes need direct skin contact to develop properly.',
+          'Wait a minute or two for it to settle before adding the second.',
+          'Apply the lighter fragrance on top, or to a different pulse point entirely (one on the wrists, one at the throat) rather than stacking both in the same spot.',
+        ],
+      },
+      { type: 'h2', text: 'Use an unscented layer as a bridge' },
+      {
+        type: 'p',
+        html: 'An unscented moisturiser applied before either fragrance does double duty: it extends how long both fragrances last (see our guide on <a href="/guides/how-to-make-perfume-last-longer/">making perfume last longer</a>) and gives the two scents something neutral to blend through rather than colliding directly on dry skin.',
+      },
+      { type: 'h2', text: 'Test before you commit to a full day' },
+      {
+        type: 'p',
+        text: 'Layering is easiest to get wrong on a day that matters, so test a new pairing on an ordinary day first. Apply both, then check back at the one-hour and four-hour marks — a pairing that smells promising in the first ten minutes can separate into two distinct, competing smells once the top notes clear and the heart notes of each fragrance emerge on their own timeline.',
+      },
+      { type: 'h2', text: 'Know when to stop' },
+      {
+        type: 'p',
+        text: 'If a pairing needs three or more products to work, it has usually stopped being layering and started being a mistake. Two fragrances, or one fragrance plus one unscented product, is the practical ceiling for most people — beyond that, it becomes difficult to predict how the combination will read to anyone standing near you.',
+      },
+    ],
+    faq: [
+      {
+        q: 'Can I layer two IKARIS fragrances together?',
+        a: 'Yes, though results vary by pairing. As a starting point, a lighter, fresher fragrance under a heavier, warmer one tends to work better than two fragrances of similar weight and note family.',
+      },
+      {
+        q: 'Is it safe to layer fragrance with scented body lotion from a different brand?',
+        a: "Generally yes, and it's one of the gentler ways to start layering since a body lotion's scent is usually far less concentrated than a standalone fragrance and less likely to compete with it directly.",
+      },
+    ],
+  },
 ];
 
 module.exports = { GUIDES };

@@ -260,3 +260,34 @@ assets/         source photography + generated WebP/favicons/OG image
 docs/           BUILD OUTPUT — this is what GitHub Pages serves, do not hand-edit
 audit.js        self-audit script — run after every build
 ```
+
+---
+
+## 9. Email marketing setup
+
+The footer includes a newsletter signup form (`Stay in scent`), wired for
+Mailchimp's free tier (500 contacts). Like the analytics IDs in section 5,
+it ships with placeholders and does nothing useful until you fill in your
+own account's values.
+
+### Config block (`data/site.js` → `NEWSLETTER`)
+
+```js
+NEWSLETTER = {
+  mailchimpAction: 'https://YOUR-SUBDOMAIN.list-manage.com/subscribe/post?u=YOUR_U&id=YOUR_LIST_ID',
+  mailchimpHoneypotName: 'b_YOUR_U_YOUR_LIST_ID',
+}
+```
+
+To get real values: create a free Mailchimp account, create an audience
+(list), then under **Audience → Signup forms → Embedded forms** copy the
+generated `<form>`'s `action` URL and the hidden bot-check input's `name`
+attribute (it looks like `b_<u>_<id>`) — paste both into the two fields
+above and rebuild. No other code changes are needed; the form posts
+directly to Mailchimp's hosted endpoint (`target="_blank"`, so the
+confirmation page opens in a new tab rather than navigating away from
+IKARIS), which is why this needs no backend of its own.
+
+The email input carries `data-clarity-mask="true"` like the checkout form's
+PII fields (see section 7) — `audit.js` enforces this on every `type="email"`
+input site-wide.
