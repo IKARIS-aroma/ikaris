@@ -88,7 +88,7 @@ async function main() {
   // minified and because re-minifying third-party code not written here
   // (GLTFLoader/OrbitControls/RoomEnvironment) risks subtly breaking it
   // for a much smaller win than the first-party files below.
-  for (const f of ['analytics.js', 'cart.js', 'main.js', 'experience.js', 'debug.js', 'icarus-cinematic.js', 'bottle-viewer.js']) {
+  for (const f of ['analytics.js', 'cart.js', 'experiment.js', 'main.js', 'experience.js', 'debug.js', 'icarus-cinematic.js', 'bottle-viewer.js']) {
     const source = fs.readFileSync(path.join(ROOT, 'src/js', f), 'utf8');
     const result = await terser.minify(source, { module: f === 'bottle-viewer.js' });
     if (result.error) throw result.error;

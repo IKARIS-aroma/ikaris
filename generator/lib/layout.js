@@ -242,6 +242,7 @@ ${renderFooter()}
 ${renderConsentBanner()}
 ${pageDataScript}
 <script src="${url('/js/cart.js')}" defer></script>
+<script src="${url('/js/experiment.js')}" defer></script>
 <script src="${url('/js/main.js')}" defer></script>
 <script src="${url('/js/experience.js')}" defer></script>
 ${extraBodyScripts}

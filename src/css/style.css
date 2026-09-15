@@ -445,6 +445,15 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
 .guide-card h3 { margin-top: 0; }
 .guide-card p { color: var(--muted); font-size: 0.9rem; }
 
+/* ---------- Recently viewed (client-only, filled in by main.js) ---------- */
+.recently-viewed { padding: var(--space-4) 0; }
+.recently-viewed__title { font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-3); }
+.recently-viewed__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-2); }
+.recently-viewed-card { display: flex; flex-direction: column; gap: 0.4em; color: var(--charcoal); }
+.recently-viewed-card img { width: 100%; aspect-ratio: 200 / 340; object-fit: cover; border-radius: var(--radius); }
+.recently-viewed-card__name { font-size: 0.85rem; font-weight: 600; }
+.recently-viewed-card__price { font-size: 0.8rem; color: var(--muted); }
+
 /* ---------- About / policy pages ---------- */
 .prose { max-width: 72ch; margin: 0 auto; }
 .prose p { color: var(--muted); }

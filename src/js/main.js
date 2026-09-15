@@ -158,6 +158,48 @@
     });
   }
 
+  // ---------- Recently viewed (client-only personalization) ----------
+  var RECENTLY_VIEWED_KEY = 'ikaris_recently_viewed';
+  var RECENTLY_VIEWED_CAP = 6;
+
+  function readRecentlyViewed() {
+    try {
+      var raw = window.localStorage.getItem(RECENTLY_VIEWED_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list : [];
+    } catch (e) { return []; }
+  }
+
+  function recordRecentlyViewed(product) {
+    try {
+      var list = readRecentlyViewed().filter(function (p) { return p.slug !== product.slug; });
+      list.unshift(product);
+      if (list.length > RECENTLY_VIEWED_CAP) list.length = RECENTLY_VIEWED_CAP;
+      window.localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(list));
+    } catch (e) { /* private browsing / storage blocked — just skip persisting */ }
+  }
+
+  function renderRecentlyViewed() {
+    var section = document.querySelector('[data-recently-viewed]');
+    var grid = document.querySelector('[data-recently-viewed-grid]');
+    if (!section || !grid) return;
+    var currentSlug = document.body.dataset.pageSlug || null;
+    var items = readRecentlyViewed().filter(function (p) { return p.slug !== currentSlug; });
+    if (!items.length) return;
+
+    grid.innerHTML = items.map(function (p) {
+      var href = BASE + '/fragrances/' + encodeURIComponent(p.slug) + '/';
+      var jpg = BASE + '/assets/products/' + encodeURIComponent(p.slug) + '.jpg';
+      var webp = BASE + '/assets/products/' + encodeURIComponent(p.slug) + '.webp';
+      return '<a class="recently-viewed-card" href="' + href + '" data-testid="recently-viewed-card">' +
+        '<picture><source srcset="' + webp + '" type="image/webp"><img src="' + jpg + '" width="200" height="340" alt="" loading="lazy" decoding="async"></picture>' +
+        '<span class="recently-viewed-card__name">' + escapeHtml(p.name) + '</span>' +
+        '<span class="recently-viewed-card__price">&#8377;' + Number(p.price).toLocaleString('en-IN') + '</span>' +
+        '</a>';
+    }).join('');
+    section.hidden = false;
+  }
+
   // ---------- Product page ----------
   function initProductPage() {
     var data = pageData();
@@ -169,6 +211,7 @@
       items: [{ item_id: item.slug, item_name: item.name, item_category: item.category, item_variant: item.variant, price: item.price, quantity: 1, index: 0, currency: 'INR' }],
     });
     window.track('price_band_view', { price_band: item.price });
+    recordRecentlyViewed({ slug: item.slug, name: item.name, price: item.price });
 
     var qtyInput = document.querySelector('[data-qty-input]');
     document.querySelectorAll('[data-qty-step]').forEach(function (btn) {
@@ -184,8 +227,13 @@
       addBtn.addEventListener('click', function () {
         var qty = Number(qtyInput && qtyInput.value) || 1;
         window.IKARIS_CART.addToCart({ slug: item.slug, name: item.name, price: item.price, category: item.category, variant: item.variant, image: item.image }, qty);
+        var experiments = window.IKARIS_EXPERIMENTS || {};
+        if (experiments.ctaCopyVariant) {
+          window.track('experiment_conversion', { experiment_name: 'cta_copy', variant: experiments.ctaCopyVariant });
+        }
+        var restingLabel = experiments.ctaCopyLabel || 'Add to Cart';
         addBtn.textContent = 'Added to Cart';
-        setTimeout(function () { addBtn.textContent = 'Add to Cart'; }, 1600);
+        setTimeout(function () { addBtn.textContent = restingLabel; }, 1600);
       });
     }
   }
@@ -485,6 +533,7 @@
     initCardEvents();
     initCollectionList();
     initProductPage();
+    renderRecentlyViewed();
     initGuideComplete();
     renderCartPage();
     initCheckoutPage();
