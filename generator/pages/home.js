@@ -5,7 +5,6 @@ const { picture } = require('../lib/picture');
 const { url, assetUrl } = require('../lib/urls');
 const { renderIcarusFigure } = require('../lib/icarus-figure');
 const { hasModel, showcase } = require('../lib/showcase');
-const { recentlyViewedSection } = require('../lib/recently-viewed');
 
 function particles(n) {
   let out = '';
@@ -122,8 +121,6 @@ function build() {
   ${epic}
 
   ${chapterBreak}
-
-  ${recentlyViewedSection()}
 
   ${gallery}
   `;

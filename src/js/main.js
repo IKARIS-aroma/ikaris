@@ -179,25 +179,68 @@
     } catch (e) { /* private browsing / storage blocked — just skip persisting */ }
   }
 
-  function renderRecentlyViewed() {
-    var section = document.querySelector('[data-recently-viewed]');
-    var grid = document.querySelector('[data-recently-viewed-grid]');
-    if (!section || !grid) return;
-    var currentSlug = document.body.dataset.pageSlug || null;
-    var items = readRecentlyViewed().filter(function (p) { return p.slug !== currentSlug; });
-    if (!items.length) return;
+  // Shows a single, compact toast for the most recently viewed fragrance —
+  // slides in from the right, sits for a few minutes, then slides back
+  // out and removes itself (or is dismissed early via its close button).
+  // Only on home/collection pages, where "browse something else" actually
+  // makes sense; a product page showing "recently viewed" of itself would
+  // be pointless, and cart/checkout are the wrong place to distract with it.
+  var RECENTLY_VIEWED_POPUP_DURATION = 3 * 60 * 1000;
 
-    grid.innerHTML = items.map(function (p) {
-      var href = BASE + '/fragrances/' + encodeURIComponent(p.slug) + '/';
-      var jpg = BASE + '/assets/products/' + encodeURIComponent(p.slug) + '.jpg';
-      var webp = BASE + '/assets/products/' + encodeURIComponent(p.slug) + '.webp';
-      return '<a class="recently-viewed-card" href="' + href + '" data-testid="recently-viewed-card">' +
-        '<picture><source srcset="' + webp + '" type="image/webp"><img src="' + jpg + '" width="200" height="340" alt="" loading="lazy" decoding="async"></picture>' +
-        '<span class="recently-viewed-card__name">' + escapeHtml(p.name) + '</span>' +
-        '<span class="recently-viewed-card__price">&#8377;' + Number(p.price).toLocaleString('en-IN') + '</span>' +
-        '</a>';
-    }).join('');
-    section.hidden = false;
+  function showRecentlyViewedPopup() {
+    var pageType = document.body.dataset.pageType;
+    if (pageType !== 'home' && pageType !== 'collection') return;
+    var items = readRecentlyViewed();
+    if (!items.length) return;
+    var p = items[0];
+
+    var href = BASE + '/fragrances/' + encodeURIComponent(p.slug) + '/';
+    var jpg = BASE + '/assets/products/' + encodeURIComponent(p.slug) + '.jpg';
+    var webp = BASE + '/assets/products/' + encodeURIComponent(p.slug) + '.webp';
+
+    var popup = document.createElement('div');
+    popup.className = 'recently-viewed-popup';
+    popup.setAttribute('data-testid', 'recently-viewed-popup');
+    popup.innerHTML =
+      '<button type="button" class="recently-viewed-popup__close" aria-label="Dismiss">&times;</button>' +
+      '<a class="recently-viewed-popup__body" href="' + href + '" data-testid="recently-viewed-popup-link">' +
+        '<picture><source srcset="' + webp + '" type="image/webp"><img src="' + jpg + '" width="80" height="136" alt="" loading="lazy" decoding="async"></picture>' +
+        '<span class="recently-viewed-popup__text">' +
+          '<span class="recently-viewed-popup__label">Recently viewed</span>' +
+          '<span class="recently-viewed-popup__name">' + escapeHtml(p.name) + '</span>' +
+          '<span class="recently-viewed-popup__price">&#8377;' + Number(p.price).toLocaleString('en-IN') + '</span>' +
+        '</span>' +
+      '</a>';
+    document.body.appendChild(popup);
+
+    var dismissTimer = null;
+    var removed = false;
+    function remove() {
+      if (removed) return;
+      removed = true;
+      popup.remove();
+    }
+    function dismiss() {
+      if (dismissTimer) { clearTimeout(dismissTimer); dismissTimer = null; }
+      if (prefersReducedMotion) { remove(); return; }
+      popup.classList.remove('is-visible');
+      popup.addEventListener('transitionend', remove, { once: true });
+      setTimeout(remove, 600); // fallback in case transitionend never fires
+    }
+
+    popup.querySelector('.recently-viewed-popup__close').addEventListener('click', dismiss);
+
+    if (prefersReducedMotion) {
+      popup.classList.add('is-visible');
+    } else {
+      // Double rAF: forces the initial off-screen state to actually paint
+      // before adding .is-visible, so the transition plays instead of the
+      // browser coalescing both style changes into one frame.
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () { popup.classList.add('is-visible'); });
+      });
+    }
+    dismissTimer = setTimeout(dismiss, RECENTLY_VIEWED_POPUP_DURATION);
   }
 
   // ---------- Product page ----------
@@ -533,7 +576,7 @@
     initCardEvents();
     initCollectionList();
     initProductPage();
-    renderRecentlyViewed();
+    showRecentlyViewedPopup();
     initGuideComplete();
     renderCartPage();
     initCheckoutPage();

@@ -5,7 +5,6 @@ const { wrapGraph, organizationNode, brandNode, websiteNode, breadcrumbListNode,
 const { escapeHtml } = require('../lib/html');
 const { url } = require('../lib/urls');
 const { hasModel, showcase } = require('../lib/showcase');
-const { recentlyViewedSection } = require('../lib/recently-viewed');
 
 const COPY = {
   men: {
@@ -39,8 +38,6 @@ function build(gender) {
 
     ${showcase(products, { listId, listName, gender })}
   </div>
-
-  ${recentlyViewedSection()}
   `;
 
   const pageData = {

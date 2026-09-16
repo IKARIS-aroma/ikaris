@@ -445,14 +445,32 @@ legend { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; 
 .guide-card h3 { margin-top: 0; }
 .guide-card p { color: var(--muted); font-size: 0.9rem; }
 
-/* ---------- Recently viewed (client-only, filled in by main.js) ---------- */
-.recently-viewed { padding: var(--space-4) 0; }
-.recently-viewed__title { font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-3); }
-.recently-viewed__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-2); }
-.recently-viewed-card { display: flex; flex-direction: column; gap: 0.4em; color: var(--charcoal); }
-.recently-viewed-card img { width: 100%; aspect-ratio: 200 / 340; object-fit: cover; border-radius: var(--radius); }
-.recently-viewed-card__name { font-size: 0.85rem; font-weight: 600; }
-.recently-viewed-card__price { font-size: 0.8rem; color: var(--muted); }
+/* ---------- Recently viewed popup (client-only, injected by main.js) ----------
+   Slides in from off-screen right ("swiping left" into view), sits for a
+   few minutes, then slides back out to the right and removes itself —
+   or is dismissed early via its close button. Transform-only transition
+   (no layout properties) so it stays cheap during the slide. */
+.recently-viewed-popup {
+  position: fixed; top: 90px; right: 16px; z-index: 250;
+  width: 240px; max-width: calc(100vw - 32px);
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: var(--space-2);
+  transform: translateX(calc(100% + 32px)); transition: transform 0.5s ease;
+}
+.recently-viewed-popup.is-visible { transform: translateX(0); }
+.recently-viewed-popup__close {
+  position: absolute; top: 4px; right: 6px; background: none; border: none; cursor: pointer;
+  font-size: 1.2rem; line-height: 1; color: var(--muted); padding: 0.3em;
+}
+.recently-viewed-popup__body { display: flex; gap: var(--space-2); color: var(--charcoal); align-items: center; }
+.recently-viewed-popup__body img { width: 56px; height: 95px; object-fit: cover; border-radius: var(--radius); flex: none; }
+.recently-viewed-popup__text { display: flex; flex-direction: column; gap: 0.2em; min-width: 0; }
+.recently-viewed-popup__label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.recently-viewed-popup__name { font-size: 0.9rem; font-weight: 600; }
+.recently-viewed-popup__price { font-size: 0.8rem; color: var(--muted); }
+@media (max-width: 480px) {
+  .recently-viewed-popup { left: 16px; right: 16px; width: auto; }
+}
 
 /* ---------- About / policy pages ---------- */
 .prose { max-width: 72ch; margin: 0 auto; }

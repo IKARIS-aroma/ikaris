@@ -205,9 +205,15 @@
     }
     toggle.setAttribute('aria-pressed', 'true');
     toggle.setAttribute('aria-label', 'Mute background music');
+    // wheel/touchstart/keydown alone missed short pages like a product
+    // page, where a visitor's very first interaction is often just
+    // clicking the quantity stepper or Add to Cart rather than scrolling —
+    // no gesture ever fired there, so music never activated. click is
+    // just as valid a user-activation gesture for the autoplay policy.
     window.addEventListener('wheel', activate, { passive: true, once: true });
     window.addEventListener('touchstart', activate, { passive: true, once: true });
     window.addEventListener('keydown', activate, { once: true });
+    window.addEventListener('click', activate, { once: true });
 
     toggle.addEventListener('click', function () {
       if (enabled) {
