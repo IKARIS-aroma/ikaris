@@ -58,6 +58,22 @@ async function toHeroPosterAvif(srcPath, destPath) {
   await sharp(srcPath).avif({ quality: 30, effort: 6 }).toFile(destPath);
 }
 
+// logo-mark.png is a detailed illustrated emblem (gradients/shading, not a
+// flat vector mark) kept at 520x496 as the master — needed full-res for the
+// Organization JSON-LD logo (generator/lib/jsonld.js) and as a compositing
+// input for the bottle label textures (generator/build-labels.js). But the
+// largest place it's actually shown to a visitor is the preloader, sized by
+// CSS to 64x60 (style.css's .preloader img) — header/footer use it smaller
+// still (34x32 / 40x38). Shipping the 520x496 master there is ~9x more
+// pixels than even a 2x-retina 64x60 display needs. This icon is generated
+// at 128x122 (2x the largest on-page size, same aspect ratio as the
+// master) and measured at -93% (PNG) / -79% (WebP) vs the master, with no
+// visible loss at actual display size.
+async function toLogoIcon(srcPath, pngDestPath, webpDestPath) {
+  await sharp(srcPath).resize(128, 122).png().toFile(pngDestPath);
+  await sharp(pngDestPath).webp({ quality: 90 }).toFile(webpDestPath);
+}
+
 async function main() {
   console.log('Knocking out logo backgrounds...');
   await knockOutWhite(path.join(ASSETS, 'logo-full.jpg'), path.join(ASSETS, 'logo-full.png'));
@@ -73,6 +89,9 @@ async function main() {
 
   console.log('Compressing Icarus hero poster to AVIF...');
   await toHeroPosterAvif(path.join(ASSETS, 'icarus', 'icarus-01-ascend-wide.jpg'), path.join(ASSETS, 'icarus', 'icarus-01-ascend-wide.avif'));
+
+  console.log('Generating right-sized logo icon...');
+  await toLogoIcon(path.join(ASSETS, 'logo-mark.png'), path.join(ASSETS, 'logo-mark-icon.png'), path.join(ASSETS, 'logo-mark-icon.webp'));
 
   console.log('Building favicons...');
   const mark = path.join(ASSETS, 'logo-mark.png');

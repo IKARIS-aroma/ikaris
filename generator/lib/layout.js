@@ -119,8 +119,8 @@ function renderHeader(canonicalPath = '') {
   <div class="container site-header__bar">
     <a href="${url('/')}" class="brand-mark" data-testid="brand-logo">
       <picture>
-        <source srcset="${assetUrl('logo-mark.webp')}" type="image/webp">
-        <img src="${assetUrl('logo-mark.png')}" width="34" height="32" alt="${escapeAttr(BRAND.name)} emblem">
+        <source srcset="${assetUrl('logo-mark-icon.webp')}" type="image/webp">
+        <img src="${assetUrl('logo-mark-icon.png')}" width="34" height="32" alt="${escapeAttr(BRAND.name)} emblem">
       </picture>
       <span class="brand-mark__word">${escapeHtml(BRAND.name)}</span>
     </a>
@@ -171,8 +171,8 @@ function renderFooter() {
     <div class="footer-grid">
       <div>
         <picture>
-          <source srcset="${assetUrl('logo-mark.webp')}" type="image/webp">
-          <img src="${assetUrl('logo-mark.png')}" width="40" height="38" alt="${escapeAttr(BRAND.name)} emblem">
+          <source srcset="${assetUrl('logo-mark-icon.webp')}" type="image/webp">
+          <img src="${assetUrl('logo-mark-icon.png')}" width="40" height="38" alt="${escapeAttr(BRAND.name)} emblem">
         </picture>
         <p>${escapeHtml(BRAND.tagline)}</p>
       </div>
@@ -231,7 +231,7 @@ function renderPage(opts) {
 ${head}
 <body data-page-type="${escapeAttr(pageType)}" data-page-category="${escapeAttr(pageCategory)}" data-page-slug="${escapeAttr(pageSlug)}" data-base-path="${escapeAttr(require('../../data/site').BASE_PATH)}">
 ${renderGtmNoscript()}
-<div class="preloader" aria-hidden="true"><picture><source srcset="${assetUrl('logo-mark.webp')}" type="image/webp"><img src="${assetUrl('logo-mark.png')}" alt=""></picture></div>
+<div class="preloader" aria-hidden="true"><picture><source srcset="${assetUrl('logo-mark-icon.webp')}" type="image/webp"><img src="${assetUrl('logo-mark-icon.png')}" alt=""></picture></div>
 <noscript><style>.preloader{display:none!important}</style></noscript>
 <div class="grain" aria-hidden="true"></div>
 ${renderHeader(canonicalPath)}
