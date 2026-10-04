@@ -22,6 +22,37 @@
   // missing, never for a stated reduced-motion preference.
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // bottle-viewer.js (three.js + GLTFLoader, ~236KB) is no longer loaded
+  // via a static <script type="module"> tag — home.js/collection.js only
+  // emit the importmap now. Both real consumers on this page (the hero
+  // bottle, below; the showcase panels, further down) need real scroll
+  // before they're ever needed, so a dynamic import() on the visitor's
+  // first scroll gesture gives the browser the whole rest of the scroll
+  // sequence as lead time, same gesture family startVideoOnce already
+  // waits for to defer the hero video. ensureBottleViewerLoaded() is
+  // shared so either consumer can kick it off (whichever happens first)
+  // and both can await the same in-flight promise rather than racing.
+  var BASE = document.body.dataset.basePath || '';
+  var bottleViewerPromise = null;
+  function ensureBottleViewerLoaded() {
+    if (!bottleViewerPromise) {
+      bottleViewerPromise = import(BASE + '/js/bottle-viewer.js').catch(function () {});
+    }
+    return bottleViewerPromise;
+  }
+  var bottleViewerTriggered = false;
+  function triggerBottleViewerLoad() {
+    if (bottleViewerTriggered) return;
+    bottleViewerTriggered = true;
+    ensureBottleViewerLoaded();
+    window.removeEventListener('wheel', triggerBottleViewerLoad);
+    window.removeEventListener('touchstart', triggerBottleViewerLoad);
+    window.removeEventListener('keydown', triggerBottleViewerLoad);
+  }
+  window.addEventListener('wheel', triggerBottleViewerLoad, { passive: true });
+  window.addEventListener('touchstart', triggerBottleViewerLoad, { passive: true });
+  window.addEventListener('keydown', triggerBottleViewerLoad);
+
   function initEpic() {
     var root = document.querySelector('[data-epic]');
     if (!root) return;
@@ -395,6 +426,10 @@
 
     var bottleInited = false;
     function initBottle() {
+      // Idempotent/shared with the page-level gesture listeners above —
+      // this is just a safety net for the rare case this fires (p > 0.55
+      // implies real scroll already happened) before that trigger did.
+      ensureBottleViewerLoaded();
       if (bottleInited || !window.IKARIS_BOTTLE_VIEWER || !window.IKARIS_BOTTLE_VIEWER.supportsWebGL()) return;
       bottleInited = true;
       window.IKARIS_BOTTLE_VIEWER.init(bottleEl, {
@@ -734,23 +769,35 @@
       function init3D(panel) {
         var el = panel.querySelector('[data-bottle-3d-lazy]');
         var slug = panel.getAttribute('data-slug');
-        if (!el || inited3d[slug] || !window.IKARIS_BOTTLE_VIEWER || !window.IKARIS_BOTTLE_VIEWER.supportsWebGL()) return;
+        if (!el || inited3d[slug]) return;
         inited3d[slug] = true;
-        el.hidden = false;
-        // Every previously-visited panel's viewer used to keep running in
-        // the background forever (its own WebGL context + render loop),
-        // never disposed — a few fragrances into the slider and several
-        // contexts are alive at once, which mobile browsers tolerate far
-        // worse than desktop. Disposing whatever's currently live before
-        // starting a new one keeps at most one context open at a time.
-        Object.keys(viewers).forEach(disposeSlug);
-        viewers[slug] = { el: el, handle: window.IKARIS_BOTTLE_VIEWER.init(el, {
-          glbUrl: el.getAttribute('data-glb-url'),
-          hideSiblingPhoto: true,
-          showHint: true,
-          enableControls: true,
-          autoRotate: true,
-        }) };
+        // The IntersectionObserver below (and the one in the showcase
+        // dispatcher further down) is single-shot — it disconnects itself
+        // after firing once. bottle-viewer.js is now dynamically imported
+        // on first scroll gesture rather than loaded as a static tag, so
+        // window.IKARIS_BOTTLE_VIEWER may not exist yet the moment this
+        // runs; awaiting the shared loader here (instead of just checking
+        // and bailing) means a panel that scrolls into view before the
+        // import resolves still gets its viewer once it does, rather than
+        // silently never getting one.
+        ensureBottleViewerLoaded().then(function () {
+          if (!window.IKARIS_BOTTLE_VIEWER || !window.IKARIS_BOTTLE_VIEWER.supportsWebGL()) return;
+          el.hidden = false;
+          // Every previously-visited panel's viewer used to keep running in
+          // the background forever (its own WebGL context + render loop),
+          // never disposed — a few fragrances into the slider and several
+          // contexts are alive at once, which mobile browsers tolerate far
+          // worse than desktop. Disposing whatever's currently live before
+          // starting a new one keeps at most one context open at a time.
+          Object.keys(viewers).forEach(disposeSlug);
+          viewers[slug] = { el: el, handle: window.IKARIS_BOTTLE_VIEWER.init(el, {
+            glbUrl: el.getAttribute('data-glb-url'),
+            hideSiblingPhoto: true,
+            showHint: true,
+            enableControls: true,
+            autoRotate: true,
+          }) };
+        });
       }
 
       function renderDots() {

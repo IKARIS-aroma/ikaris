@@ -135,9 +135,20 @@ function build() {
   const jsonLd = wrapGraph([organizationNode(), brandNode(), websiteNode()]);
 
   const anyHas3D = heroHas3D || men.concat(women).some((p) => hasModel(p.slug));
+  // The importmap has to be present before any module load (static or
+  // dynamic) that resolves the "three" bare specifier — but it's a tiny
+  // inline JSON block, not a network request, so there's no cost to
+  // keeping it unconditional-with-the-rest-of-home.js here. bottle-
+  // viewer.js itself is NOT loaded as a static <script type="module">
+  // tag below anymore — icarus-cinematic.js dynamically import()s it on
+  // the visitor's first scroll gesture instead (same gesture family the
+  // hero video already waits for), since every real 3D consumer on this
+  // page (the hero bottle, the showcase panels) needs real scroll first
+  // anyway. That was previously ~236KB of three.js + GLTFLoader fetched
+  // unconditionally at parse time regardless of whether the visitor ever
+  // scrolled far enough to need it.
   const importMap = anyHas3D ? `<script type="importmap">{"imports":{"three":"${url('/js/vendor/three.module.min.js')}"}}</script>` : '';
-  const viewerScript = anyHas3D ? `<script type="module" src="${url('/js/bottle-viewer.js')}"></script>` : '';
-  // defer on all four (not just the last): without it, each of these
+  // defer on all three (not just the last): without it, each of these
   // synchronous <script src> tags pauses the parser to fetch AND execute
   // before moving to the next one, right at the tail of body — deferring
   // lets the browser fetch them without blocking and still preserves
@@ -147,7 +158,6 @@ function build() {
   const cinematicScripts = `<script src="${url('/js/vendor/gsap.min.js')}" defer></script>
 <script src="${url('/js/vendor/ScrollTrigger.min.js')}" defer></script>
 <script src="${url('/js/vendor/lenis.min.js')}" defer></script>
-${viewerScript}
 <script src="${url('/js/icarus-cinematic.js')}" defer></script>`;
 
   const html = renderPage({

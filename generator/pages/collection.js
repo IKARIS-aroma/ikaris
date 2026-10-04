@@ -61,13 +61,15 @@ function build(gender) {
     : "Three original women's fragrances, ₹3,500–₹3,800: iris, rose, jasmine, musk. Real perfumery, no dupes. Browse notes, longevity and sillage.";
 
   const anyHas3D = products.some((p) => hasModel(p.slug));
+  // See the same comment in home.js — bottle-viewer.js is dynamically
+  // import()'d by icarus-cinematic.js on first scroll gesture rather than
+  // loaded as a static module script here; the importmap alone (a tiny
+  // inline block, not a request) still needs to be present.
   const importMap = anyHas3D ? `<script type="importmap">{"imports":{"three":"${url('/js/vendor/three.module.min.js')}"}}</script>` : '';
-  const viewerScript = anyHas3D ? `<script type="module" src="${url('/js/bottle-viewer.js')}"></script>` : '';
   // See the same comment in home.js's cinematicScripts — defer preserves
   // load order while letting the parser continue instead of blocking on
   // each synchronous fetch+execute at the tail of body.
   const carouselScripts = `<script src="${url('/js/vendor/gsap.min.js')}" defer></script>
-${viewerScript}
 <script src="${url('/js/icarus-cinematic.js')}" defer></script>`;
 
   const html = renderPage({
