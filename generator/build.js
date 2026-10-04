@@ -203,13 +203,18 @@ Sitemap: ${SITE_URL}/sitemap.xml
   // that already only runs behind the analytics consent gate. The real,
   // zero-risk wins are frame-ancestors (this site has no reason to ever
   // be framed) and the origin allowlists actually being scoped to what's
-  // in use (GTM/GA4 — fonts are self-hosted via generator/build-fonts.js,
+  // in use (GTM/GA4/Clarity — fonts are self-hosted via generator/build-fonts.js,
   // so font-src/style-src need no external origin at all) rather than
-  // left wide open — extend the connect-src/script-src lists if Clarity or Meta Pixel
-  // (CLARITY_PROJECT_ID/META_PIXEL_ID in data/site.js) are ever turned on.
+  // left wide open — extend the connect-src/script-src lists further if
+  // Meta Pixel (META_PIXEL_ID in data/site.js) is ever turned on.
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+    // Clarity rotates traffic across constantly-changing single-letter
+    // subdomains (b/d/e/f/g.clarity.ms, scripts.clarity.ms, ...) for load
+    // balancing — Microsoft's own CSP guidance is to wildcard *.clarity.ms
+    // in both script-src and connect-src rather than pin www.clarity.ms,
+    // which only covers the initial tag fetch, not the telemetry it sends.
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.clarity.ms",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     // blob: is required, not optional decoration — the vendored
@@ -226,7 +231,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
     // <img src="blob:...">. blob: in img-src alone (the first, wrong fix)
     // never touched this at all — it needs to be in connect-src.
     "img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com",
-    "connect-src 'self' blob: https://www.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com",
+    "connect-src 'self' blob: https://www.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com https://*.clarity.ms",
     "frame-src https://www.googletagmanager.com",
     "object-src 'none'",
     "base-uri 'self'",
