@@ -414,5 +414,28 @@ window.IKARIS_BOTTLE_VIEWER = { init: initViewer, supportsWebGL };
 document.addEventListener('DOMContentLoaded', () => {
   const containers = document.querySelectorAll('[data-bottle-3d]');
   if (!containers.length || !supportsWebGL()) return;
-  containers.forEach((c) => initViewer(c));
+  // Product pages render this container below the fold (under the fold on
+  // every real viewport), but used to call initViewer() unconditionally
+  // here on every page load — fetching + decoding a >1MB .glb and paying
+  // for a full WebGL context + PMREM environment pass before the visitor
+  // had scrolled anywhere near it. Same rootMargin as the showcase
+  // carousel's lazy mount in icarus-cinematic.js, for consistency.
+  if (!('IntersectionObserver' in window)) {
+    containers.forEach((c) => initViewer(c));
+    return;
+  }
+  // containers themselves start `hidden` (display:none, swapped in by
+  // initViewer once ready) and a display:none element never reports as
+  // intersecting — it has no layout box for the observer to measure —
+  // so this has to watch each container's visible parent wrapper instead
+  // and resolve back to the actual container to init.
+  const lazyIO = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      lazyIO.unobserve(entry.target);
+      const c = entry.target.querySelector('[data-bottle-3d]');
+      if (c) initViewer(c);
+    });
+  }, { rootMargin: '200px' });
+  containers.forEach((c) => lazyIO.observe(c.parentElement || c));
 });
