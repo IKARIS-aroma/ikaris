@@ -237,10 +237,22 @@ Sitemap: ${SITE_URL}/sitemap.xml
     "base-uri 'self'",
     "frame-ancestors 'none'",
   ].join('; ');
+  // Filenames here are NOT content-hashed (js/*.js and assets/* keep their
+  // plain names across every deploy), so "immutable, max-age=31536000" was
+  // a real bug, not just an over-optimisation: a browser that cached
+  // cart.js today has zero reason to ever re-check it, so a visitor
+  // returning after a future deploy that changes cart.js keeps running the
+  // STALE version for up to a year. Content-hashing filenames is the
+  // proper long-term fix but means threading a hash through every url()/
+  // assetUrl() call site across the generator — out of scope for this fix.
+  // Bounding max-age instead keeps most of the caching benefit (Cloudflare's
+  // own edge cache already serves fresh content immediately after each
+  // deploy regardless — this bound only protects against a stale BROWSER
+  // cache) while capping how long a stale script or asset can survive.
   const headers = `/assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, must-revalidate
 /js/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=3600, must-revalidate
 /*
   Cache-Control: public, max-age=0, must-revalidate
   X-Frame-Options: DENY
