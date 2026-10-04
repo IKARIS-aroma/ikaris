@@ -41,6 +41,23 @@ async function toWebp(srcPath, destPath) {
   await sharp(srcPath).webp({ quality: 82 }).toFile(destPath);
 }
 
+// The Icarus hero poster is dense engraved cross-hatching on a cream
+// ground — thousands of thin parallel lines, worst-case input for a
+// block-transform lossy encoder. Measured directly: WebP at every
+// quality from 60-90 came out LARGER than the 252KB source JPEG (the
+// fine hatching defeats its usual advantage over JPEG). AVIF's
+// different transform handles it far better — quality 30 measured
+// 80.4KB (-68%) with no visible loss of the hatching or banding in the
+// cream ground at 2x-zoomed crop comparison against quality 25/35/90
+// and the original. No <picture>/fallback here: <video poster> is a
+// single URL with no format-negotiation mechanism the way <picture>
+// gives <img>, so this is AVIF-only — acceptable given how broad AVIF
+// support is by now and that the failure mode for an unsupporting
+// browser is a missing poster frame, not a broken video.
+async function toHeroPosterAvif(srcPath, destPath) {
+  await sharp(srcPath).avif({ quality: 30, effort: 6 }).toFile(destPath);
+}
+
 async function main() {
   console.log('Knocking out logo backgrounds...');
   await knockOutWhite(path.join(ASSETS, 'logo-full.jpg'), path.join(ASSETS, 'logo-full.png'));
@@ -53,6 +70,9 @@ async function main() {
     await toWebp(path.join(ASSETS, 'products', `${slug}.jpg`), path.join(ASSETS, 'products', `${slug}.webp`));
     await toWebp(path.join(ASSETS, 'thumbs', `${slug}.jpg`), path.join(ASSETS, 'thumbs', `${slug}.webp`));
   }
+
+  console.log('Compressing Icarus hero poster to AVIF...');
+  await toHeroPosterAvif(path.join(ASSETS, 'icarus', 'icarus-01-ascend-wide.jpg'), path.join(ASSETS, 'icarus', 'icarus-01-ascend-wide.avif'));
 
   console.log('Building favicons...');
   const mark = path.join(ASSETS, 'logo-mark.png');

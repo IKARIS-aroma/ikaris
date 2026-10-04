@@ -26,6 +26,15 @@ function renderIcarusFigure() {
   // should have matched the wide query). JS-driven src selection (see
   // icarus-cinematic.js) is the standard, reliable workaround — so the
   // codec choice is made in JS too (canPlayType), not via <source type>.
+  // Poster is AVIF, not JPEG/WebP — this artwork's dense cross-hatching is
+  // worst-case input for a block-transform encoder; WebP measured LARGER
+  // than the 252KB source JPEG at every quality tried, AVIF got it to
+  // 80KB (-68%) with no visible loss (compared at 2x-zoomed crops against
+  // several quality levels). No <picture>/fallback: <video poster> is a
+  // single URL with no format-negotiation the way <picture> gives <img>,
+  // so an unsupporting browser just shows no poster frame rather than a
+  // broken video — accepted given how broad AVIF support is by now. See
+  // generator/process-assets.js's toHeroPosterAvif for the conversion.
   // preload="metadata", not "auto" — this clip is 12-24MB depending on
   // variant/codec (measured, not the low estimate an earlier comment in
   // icarus-cinematic.js gave). Note this attribute alone does NOT stop
@@ -40,7 +49,7 @@ function renderIcarusFigure() {
   // is what makes that deferral actually mean something (no eager
   // metadata probe either) rather than a load-bearing fix by itself.
   return `<div class="epic__icarus" data-epic-figure aria-hidden="true">
-    <video data-icarus-video data-wide-src="${wideMp4}" data-tall-src="${tallMp4}" data-wide-src-webm="${wideWebm}" data-tall-src-webm="${tallWebm}" data-breakpoint="${BREAKPOINT_PX}" muted playsinline webkit-playsinline preload="metadata" poster="${assetUrl('icarus/icarus-01-ascend-wide.jpg')}"></video>
+    <video data-icarus-video data-wide-src="${wideMp4}" data-tall-src="${tallMp4}" data-wide-src-webm="${wideWebm}" data-tall-src-webm="${tallWebm}" data-breakpoint="${BREAKPOINT_PX}" muted playsinline webkit-playsinline preload="metadata" poster="${assetUrl('icarus/icarus-01-ascend-wide.avif')}"></video>
   </div>`;
 }
 
